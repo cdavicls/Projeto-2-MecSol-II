@@ -1,0 +1,13 @@
+{
+  "description": "Simply supported beam under a uniform distributed load",
+  "tolerance": 1e-6,
+  "checks": {
+    "reactions[0].fy": 2000.0,
+    "reactions[1].fy": 2000.0,
+    "displacements[0].theta": -0.0015238095238095239,
+    "displacements[1].theta": 0.0015238095238095239,
+    "maxima.shear": 2000.0,
+    "maxima.moment": 2000.0,
+    "maxima.deflection": 0.0019047619047619048
+  }
+}

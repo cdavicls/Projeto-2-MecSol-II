@@ -1,0 +1,11 @@
+{
+  "description": "Simply supported beam under a linearly varying load",
+  "tolerance": 1e-6,
+  "checks": {
+    "reactions[0].fy": 666.6666666666666,
+    "reactions[1].fy": 1333.3333333333333,
+    "maxima.shear": 1333.3333333333333,
+    "maxima.moment": 1026.4004785593347,
+    "maxima.deflection": 0.000954102379069347
+  }
+}

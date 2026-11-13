@@ -1,0 +1,13 @@
+{
+  "description": "Cantilever with a tip point load",
+  "tolerance": 1e-6,
+  "checks": {
+    "reactions[0].fy": 1000.0,
+    "reactions[0].mz": 4000.0,
+    "displacements[1].v": -0.01219047619047619,
+    "displacements[1].theta": -0.004571428571428572,
+    "maxima.shear": 1000.0,
+    "maxima.moment": 4000.0,
+    "maxima.deflection": 0.01219047619047619
+  }
+}

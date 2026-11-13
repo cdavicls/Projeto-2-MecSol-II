@@ -1,0 +1,13 @@
+{
+  "description": "Two-span continuous beam under a uniform distributed load",
+  "tolerance": 1e-6,
+  "checks": {
+    "reactions[0].fy": 1500.0,
+    "reactions[1].fy": 5000.0,
+    "reactions[2].fy": 1500.0,
+    "elements[0].end_forces.mj": -2000.0,
+    "elements[1].end_forces.mi": 2000.0,
+    "maxima.shear": 2500.0,
+    "maxima.moment": 2000.0
+  }
+}

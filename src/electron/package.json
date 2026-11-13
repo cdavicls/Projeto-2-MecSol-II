@@ -1,0 +1,13 @@
+{
+  "name": "ms2-beam-gui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Desktop GUI for the MS2 beam finite element solver",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^39.0.0"
+  }
+}

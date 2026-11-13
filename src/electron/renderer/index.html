@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src http://127.0.0.1:8765; img-src 'self' data:;"
+    />
+    <title>MS2 Beam</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">MS2</div>
+          <div>
+            <h1>Vigas Euler-Bernoulli</h1>
+            <p>SET0184 - Mecânica dos Sólidos II</p>
+          </div>
+        </div>
+        <div class="toolbar">
+          <label class="field">
+            <span>Exemplo</span>
+            <select id="example-select">
+              <option value="">Carregando...</option>
+            </select>
+          </label>
+          <button id="solve-button" class="primary">Resolver</button>
+          <span id="status" class="status">Iniciando...</span>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="sidebar">
+          <section class="panel">
+            <div class="panel-title">
+              <h2>Modelo</h2>
+              <span class="hint">JSON</span>
+            </div>
+            <textarea id="model-editor" spellcheck="false"></textarea>
+            <div class="button-row">
+              <button id="apply-button">Aplicar</button>
+              <button id="import-button">Importar</button>
+              <button id="export-button">Exportar</button>
+            </div>
+            <input id="file-input" type="file" accept=".json,application/json" hidden />
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <h2>Resumo</h2>
+            </div>
+            <div id="summary" class="summary"></div>
+          </section>
+        </aside>
+
+        <section class="canvas-panel">
+          <div id="view-tabs" class="tabs">
+            <button data-view="model" class="active">Modelo</button>
+            <button data-view="deflection">Deformada</button>
+            <button data-view="shear">Cortante</button>
+            <button data-view="moment">Momento</button>
+          </div>
+          <div class="canvas-wrap">
+            <svg id="canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div id="empty-state" class="empty-state">
+              Carregue um exemplo ou aplique um modelo JSON para começar.
+            </div>
+          </div>
+          <div id="legend" class="legend"></div>
+        </section>
+
+        <aside class="sidebar">
+          <section class="panel">
+            <div class="panel-title">
+              <h2>Máximas</h2>
+            </div>
+            <div id="maxima" class="metric-grid"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <h2>Reações</h2>
+            </div>
+            <div id="reactions" class="table-wrap"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <h2>Deslocamentos</h2>
+            </div>
+            <div id="displacements" class="table-wrap"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <h2>Esforços nas extremidades</h2>
+            </div>
+            <div id="end-forces" class="table-wrap"></div>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
