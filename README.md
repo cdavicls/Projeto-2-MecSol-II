@@ -15,8 +15,8 @@ Projeto 2 da disciplina SET0184 — Mecânica dos Sólidos II (EESC-USP): implem
 
 ## Status
 
-Fases 0–3 concluídas (MVP): núcleo C++, CLI com JSON, backend Python e GUI Electron funcional com visualização de modelo, deformada, cortante e momento.
-Próxima etapa: documentação (`docs/`), relatório LaTeX, slides, QA e ensaio.
+Fases 0–3 e documentação técnica (`docs/01`–`07`) concluídas (MVP): núcleo C++, CLI com JSON, backend Python, GUI Electron e quatro exemplos validados.
+Próxima etapa: relatório LaTeX, slides, QA e ensaio.
 Apresentação oral: **17/11/2026**.
 
 ## Objetivo
@@ -200,17 +200,17 @@ Paleta: fundo `#0B0E1A`, texto `#E6EAF5`, acento `#5B8CFF`; fontes Inter + JetBr
 
 Cada exemplo tem `input.json`, `expected.json` e `output.json`; a validação é feita por `scripts/validate_examples.py`.
 
-## Documentação prevista
+## Documentação
 
-- `docs/01-teoria.md` — derivação da linha elástica, Eq. 32.11–32.17, superposição e convenções de sinal.
-- `docs/02-matematica-para-codigo.md` — mapa equação → classe/método, com trechos de código e referências `arquivo:linha`.
-- `docs/03-arquitetura.md` — classes, fluxo e diagramas Mermaid.
-- `docs/04-api-e-formatos.md` — schema JSON, CLI e formato Fortran.
-- `docs/05-gui.md` — uso da GUI.
-- `docs/06-exemplos-validacao.md` — fórmulas, resultados e erros.
-- `docs/07-build-e-execucao.md` — build, CLI, backend e Electron.
-- `docs/relatorio/` — relatório LaTeX em pt-BR.
-- `docs/apresentacao/` — slides da oral.
+- → [01 — Teoria](Home/Projetos/MS2_projeto2/docs/01-teoria.md) — linha elástica, Eq. 32.17, funções de forma, cargas equivalentes e convenções.
+- → [02 — Matemática para código](Home/Projetos/MS2_projeto2/docs/02-matematica-para-codigo.md) — mapa equação → classe/método com referências `arquivo:linha`.
+- → [03 — Arquitetura](Home/Projetos/MS2_projeto2/docs/03-arquitetura.md) — camadas, fluxo e decisões.
+- → [04 — API e formatos](Home/Projetos/MS2_projeto2/docs/04-api-e-formatos.md) — schema JSON, CLI e API HTTP.
+- → [05 — GUI](Home/Projetos/MS2_projeto2/docs/05-gui.md) — uso, recursos e roadmap.
+- → [06 — Exemplos e validação](Home/Projetos/MS2_projeto2/docs/06-exemplos-validacao.md) — fórmulas, resultados e erros.
+- → [07 — Build e execução](Home/Projetos/MS2_projeto2/docs/07-build-e-execucao.md) — build, testes, backend, Electron e troubleshooting.
+- `docs/relatorio/` — relatório LaTeX em pt-BR (a produzir).
+- `docs/apresentacao/` — slides da oral (a produzir).
 
 ## Cronograma
 

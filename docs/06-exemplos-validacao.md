@@ -87,7 +87,7 @@ Entrada: `examples/04-continuous-beam/input.json`.
 |---|---|---|
 | `ms2_tests` | 18 casos Catch2, 80 asserções | 100% |
 | `ms2_backend` | 6 casos de API e integração | 100% |
-| `validate_examples.py` | 27 verificações numéricas | todas `ok` |
+| `validate_examples.py` | 26 verificações numéricas | todas `ok` |
 
 ## Interpretação dos erros
 
