@@ -6,6 +6,7 @@
 namespace ms2 {
 
 void Model::addNode(const Node& node) {
+    // A numeração sequencial simplifica o mapeamento id -> índice (id - 1).
     if (node.id != nodes_.size() + 1) {
         throw std::invalid_argument("Node ids must be contiguous and start at 1");
     }
@@ -13,6 +14,7 @@ void Model::addNode(const Node& node) {
 }
 
 void Model::addElement(const Element& element) {
+    // Valida a numeração do elemento e a existência dos nós conectados.
     if (element.id() != elements_.size() + 1) {
         throw std::invalid_argument("Element ids must be contiguous and start at 1");
     }
@@ -21,6 +23,7 @@ void Model::addElement(const Element& element) {
         throw std::invalid_argument("Element references an invalid node");
     }
 
+    // O comprimento é a distância euclidiana entre os dois nós.
     Element stored = element;
     const Node& node_i = node(stored.nodeI());
     const Node& node_j = node(stored.nodeJ());
@@ -35,6 +38,7 @@ const std::vector<Node>& Model::nodes() const { return nodes_; }
 const std::vector<Element>& Model::elements() const { return elements_; }
 
 const Node& Model::node(Index id) const {
+    // IDs são 1-based; o vetor interno é 0-based.
     if (id < 1 || id > nodes_.size()) {
         throw std::out_of_range("Node id out of range");
     }
@@ -42,6 +46,7 @@ const Node& Model::node(Index id) const {
 }
 
 const Element& Model::element(Index id) const {
+    // IDs são 1-based; o vetor interno é 0-based.
     if (id < 1 || id > elements_.size()) {
         throw std::out_of_range("Element id out of range");
     }

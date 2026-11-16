@@ -381,8 +381,20 @@ button.primary {
   border-radius: 50%;
 }
 
-.legend i.support {
+.legend i.support-fixed {
   background: var(--accent-2);
+  border-radius: 1px;
+}
+
+.legend i.support-pinned {
+  background: var(--accent-2);
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.legend i.support-roller {
+  background: var(--accent-2);
+  border-radius: 50%;
 }
 
 .legend i.load {

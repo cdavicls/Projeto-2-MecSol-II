@@ -7,9 +7,11 @@ namespace ms2 {
 
 Matrix::Matrix(Index rows, Index cols, double value)
     : rows_(rows), cols_(cols), data_(rows * cols, value) {
+    // Armazenamento contíguo em ordem de linha: índice = row * cols + column.
 }
 
 Matrix Matrix::identity(Index size) {
+    // Matriz identidade usada em testes e operações auxiliares.
     Matrix result(size, size, 0.0);
     for (Index i = 0; i < size; ++i) {
         result(i, i) = 1.0;
@@ -26,6 +28,7 @@ bool Matrix::empty() const { return data_.empty(); }
 bool Matrix::isSquare() const { return rows_ == cols_; }
 
 bool Matrix::isSymmetric(double tolerance) const {
+    // Compara apenas o triângulo superior com o inferior.
     if (!isSquare()) {
         return false;
     }
@@ -40,6 +43,7 @@ bool Matrix::isSymmetric(double tolerance) const {
 }
 
 double& Matrix::operator()(Index row, Index column) {
+    // Acesso para escrita com verificação de limites.
     if (row >= rows_ || column >= cols_) {
         throw std::out_of_range("Matrix index out of range");
     }
@@ -47,6 +51,7 @@ double& Matrix::operator()(Index row, Index column) {
 }
 
 double Matrix::operator()(Index row, Index column) const {
+    // Acesso para leitura com verificação de limites.
     if (row >= rows_ || column >= cols_) {
         throw std::out_of_range("Matrix index out of range");
     }
@@ -58,6 +63,7 @@ std::vector<double>& Matrix::data() { return data_; }
 const std::vector<double>& Matrix::data() const { return data_; }
 
 Matrix Matrix::transposed() const {
+    // Cria uma matriz cols x rows e copia cada elemento para (j, i).
     Matrix result(cols_, rows_);
     for (Index i = 0; i < rows_; ++i) {
         for (Index j = 0; j < cols_; ++j) {
@@ -68,6 +74,7 @@ Matrix Matrix::transposed() const {
 }
 
 std::vector<double> Matrix::multiply(const std::vector<double>& vector) const {
+    // Produto y = A * x, com uma linha de A por componente de y.
     if (vector.size() != cols_) {
         throw std::invalid_argument("Matrix-vector dimensions do not match");
     }

@@ -1,0 +1,69 @@
+\babel@toc {brazilian}{}\relax 
+\contentsline {section}{\numberline {1}Introdução}{3}{section.1}%
+\contentsline {section}{\numberline {2}Teoria da linha elástica}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Hipóteses de Euler--Bernoulli}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Cinemática e deformações}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Tensões e momento fletor}{4}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Equilíbrio e equação governante}{4}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Condições de contorno}{5}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}Soluções analíticas de referência}{5}{subsection.2.6}%
+\contentsline {paragraph}{Viga em balanço com carga pontual na extremidade.}{5}{section*.4}%
+\contentsline {paragraph}{Viga biapoiada com carga uniformemente distribuída.}{6}{section*.5}%
+\contentsline {subsection}{\numberline {2.7}Convenções de sinal}{6}{subsection.2.7}%
+\contentsline {subsection}{\numberline {2.8}Superposição e linearidade}{6}{subsection.2.8}%
+\contentsline {subsection}{\numberline {2.9}Limites da formulação}{7}{subsection.2.9}%
+\contentsline {section}{\numberline {3}Formulação por elementos finitos}{7}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Discretização e graus de liberdade}{7}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Funções de forma de Hermite}{7}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Matriz de rigidez elementar}{8}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Vetores de carga equivalentes}{9}{subsection.3.4}%
+\contentsline {paragraph}{Carga distribuída linear.}{9}{section*.8}%
+\contentsline {paragraph}{Carga pontual interna.}{10}{section*.9}%
+\contentsline {subsection}{\numberline {3.5}Montagem global}{10}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}Condições de contorno e redução do sistema}{10}{subsection.3.6}%
+\contentsline {subsection}{\numberline {3.7}Solução do sistema linear}{11}{subsection.3.7}%
+\contentsline {subsection}{\numberline {3.8}Pós-processamento}{11}{subsection.3.8}%
+\contentsline {paragraph}{Reações.}{11}{section*.10}%
+\contentsline {paragraph}{Esforços de extremidade.}{11}{section*.11}%
+\contentsline {paragraph}{Esforços internos.}{11}{section*.12}%
+\contentsline {paragraph}{Deformada.}{12}{section*.13}%
+\contentsline {subsection}{\numberline {3.9}Algoritmo completo}{12}{subsection.3.9}%
+\contentsline {section}{\numberline {4}Implementação no código}{12}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Arquitetura e responsabilidades}{12}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}\texttt {Section}: rigidez à flexão}{13}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}\texttt {Node} e \texttt {Model}: geometria e DOFs}{13}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}\texttt {Element::localStiffnessMatrix}: Eq.~(32.17)}{14}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}\texttt {Element::shapeFunctions}: funções de Hermite}{15}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}\texttt {Element::equivalentDistributedLoad} e \texttt {equivalentPointLoad}}{15}{subsection.4.6}%
+\contentsline {subsection}{\numberline {4.7}\texttt {Assembler}: montagem global}{16}{subsection.4.7}%
+\contentsline {subsection}{\numberline {4.8}\texttt {BoundaryConditionHandler}: redução e expansão}{17}{subsection.4.8}%
+\contentsline {subsection}{\numberline {4.9}\texttt {LinearSolver}: eliminação de Gauss}{19}{subsection.4.9}%
+\contentsline {subsection}{\numberline {4.10}\texttt {BeamSolver}: orquestração}{20}{subsection.4.10}%
+\contentsline {subsection}{\numberline {4.11}\texttt {PostProcessor}: reações, esforços e deformada}{21}{subsection.4.11}%
+\contentsline {subsection}{\numberline {4.12}\texttt {InputParser}, \texttt {OutputWriter} e \texttt {main}}{24}{subsection.4.12}%
+\contentsline {section}{\numberline {5}Exemplo passo a passo: viga em balanço}{28}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Dados de entrada}{28}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Passo 1: leitura do JSON}{28}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Passo 2: comprimento e rigidez à flexão}{28}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Passo 3: matriz de rigidez local}{29}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Passo 4: vetor de cargas global}{29}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}Passo 5: condições de contorno}{29}{subsection.5.6}%
+\contentsline {subsection}{\numberline {5.7}Passo 6: sistema reduzido}{29}{subsection.5.7}%
+\contentsline {subsection}{\numberline {5.8}Passo 7: solução}{30}{subsection.5.8}%
+\contentsline {subsection}{\numberline {5.9}Passo 8: expansão do vetor de deslocamentos}{30}{subsection.5.9}%
+\contentsline {subsection}{\numberline {5.10}Passo 9: reações de apoio}{30}{subsection.5.10}%
+\contentsline {subsection}{\numberline {5.11}Passo 10: esforços de extremidade}{30}{subsection.5.11}%
+\contentsline {subsection}{\numberline {5.12}Passo 11: diagramas}{31}{subsection.5.12}%
+\contentsline {subsection}{\numberline {5.13}Passo 12: comparação com a solução analítica}{31}{subsection.5.13}%
+\contentsline {subsection}{\numberline {5.14}Passo 13: saída JSON}{31}{subsection.5.14}%
+\contentsline {subsection}{\numberline {5.15}Resumo do caminho no código}{32}{subsection.5.15}%
+\contentsline {section}{\numberline {6}Segundo exemplo: carga distribuída}{32}{section.6}%
+\contentsline {section}{\numberline {7}Validação e resultados}{33}{section.7}%
+\contentsline {section}{\numberline {8}Conclusão}{33}{section.8}%
+\contentsline {section}{\numberline {A}Formulário resumido}{34}{appendix.A}%
+\contentsline {section}{\numberline {B}Compilação e execução}{34}{appendix.B}%
+\contentsline {subsection}{\numberline {B.1}Build e testes}{34}{subsection.B.1}%
+\contentsline {subsection}{\numberline {B.2}CLI}{35}{subsection.B.2}%
+\contentsline {subsection}{\numberline {B.3}Validação dos exemplos}{35}{subsection.B.3}%
+\contentsline {subsection}{\numberline {B.4}GUI}{35}{subsection.B.4}%
+\contentsline {subsection}{\numberline {B.5}Overleaf}{35}{subsection.B.5}%

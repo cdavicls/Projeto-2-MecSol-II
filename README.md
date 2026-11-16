@@ -1,7 +1,7 @@
 ---
 type: folder
 status: active
-updated: "2026-11-08"
+updated: "2026-11-14"
 tags: [projetos, pessoal, folder-index]
 ---
 
@@ -15,8 +15,8 @@ Projeto 2 da disciplina SET0184 — Mecânica dos Sólidos II (EESC-USP): implem
 
 ## Status
 
-Fases 0–3 e documentação técnica (`docs/01`–`07`) concluídas (MVP): núcleo C++, CLI com JSON, backend Python, GUI Electron e quatro exemplos validados.
-Próxima etapa: relatório LaTeX, slides, QA e ensaio.
+Fases 0–3, documentação técnica (`docs/01`–`07`) e relatório LaTeX concluídos (MVP): núcleo C++, CLI com JSON, backend Python, GUI Electron e quatro exemplos validados.
+Próxima etapa: slides, QA e ensaio.
 Apresentação oral: **17/11/2026**.
 
 ## Objetivo
@@ -38,6 +38,7 @@ Implementar e validar um solver de vigas por elementos finitos (Euler-Bernoulli)
 - GUI desktop com Electron + Python.
 - Documentação robusta da tradução teoria → matemática → código.
 - Diagramas de esforço cortante, momento fletor e deformada.
+- Tipos de apoio explícitos: engaste (`fixed`), pino (`pinned`) e rolete (`roller`).
 - Carga pontual no interior do elemento (além das cargas nodais e distribuídas).
 - Compatibilidade com o formato de entrada do programa Fortran do PDF.
 - Testes automatizados (CTest).
@@ -122,10 +123,13 @@ MS2_projeto2/
 │   ├── python/
 │   └── data/
 ├── examples/
-│   ├── 01-cantilever/
-│   ├── 02-simply-supported-udl/
-│   ├── 03-simply-supported-linear/
-│   └── 04-continuous-beam/
+│   ├── example-1/
+│   │   ├── input.json
+│   │   ├── expected.json
+│   │   └── output.json
+│   ├── example-2/
+│   ├── example-3/
+│   └── example-4/
 ├── scripts/
 ├── third_party/
 │   ├── nlohmann/
@@ -209,7 +213,8 @@ Cada exemplo tem `input.json`, `expected.json` e `output.json`; a validação é
 - → [05 — GUI](Home/Projetos/MS2_projeto2/docs/05-gui.md) — uso, recursos e roadmap.
 - → [06 — Exemplos e validação](Home/Projetos/MS2_projeto2/docs/06-exemplos-validacao.md) — fórmulas, resultados e erros.
 - → [07 — Build e execução](Home/Projetos/MS2_projeto2/docs/07-build-e-execucao.md) — build, testes, backend, Electron e troubleshooting.
-- `docs/relatorio/` — relatório LaTeX em pt-BR (a produzir).
+- → [Relatório LaTeX](Home/Projetos/MS2_projeto2/docs/relatorio/overleaf/README.md) — fonte e ZIP para Overleaf.
+- `docs/relatorio/ms2-relatorio-overleaf.zip` — pacote pronto para importar no Overleaf.
 - `docs/apresentacao/` — slides da oral (a produzir).
 
 ## Cronograma
@@ -270,11 +275,11 @@ O script configura o CMake, compila `ms2_core`, `ms2_cli` e `ms2_tests`, e execu
 ./build/ms2_cli
 
 # Resolver um exemplo e imprimir o JSON
-./build/ms2_cli -i examples/02-simply-supported-udl/input.json
+./build/ms2_cli -i examples/example-2/input.json
 
 # Salvar o resultado e aumentar a resolução dos diagramas
-./build/ms2_cli -i examples/03-simply-supported-linear/input.json \
-  -o examples/03-simply-supported-linear/output.json --samples 2001
+./build/ms2_cli -i examples/example-3/input.json \
+  -o examples/example-3/output.json --samples 2001
 
 # Validar todos os exemplos contra as respostas analíticas
 ./scripts/validate_examples.py
@@ -288,7 +293,7 @@ Entrada:
 {
   "nodes": [{"id": 1, "x": 0.0, "y": 0.0}],
   "elements": [{"id": 1, "node_i": 1, "node_j": 2, "E": 210e9, "I": 8.33e-6}],
-  "supports": [{"node": 1, "fix_v": true, "fix_theta": true}],
+  "supports": [{"node": 1, "type": "fixed", "fix_v": true, "fix_theta": true}],
   "nodal_loads": [{"node": 2, "fy": -1000.0, "mz": 0.0}],
   "distributed_loads": [{"element": 1, "q_i": -1000.0, "q_j": -1000.0}],
   "point_loads": [{"element": 1, "x": 2.0, "fy": -1000.0}]

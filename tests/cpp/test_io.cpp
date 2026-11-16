@@ -60,3 +60,49 @@ TEST_CASE("JSON parser rejects a point load at an element end", "[io]") {
 
     REQUIRE_THROWS_AS(ms2::InputParser::parseString(text), std::invalid_argument);
 }
+
+TEST_CASE("Support type shorthand maps to DOF constraints", "[io]") {
+    const std::string text = R"({
+        "nodes": [
+            {"id": 1, "x": 0.0, "y": 0.0},
+            {"id": 2, "x": 4.0, "y": 0.0},
+            {"id": 3, "x": 8.0, "y": 0.0}
+        ],
+        "elements": [
+            {"id": 1, "node_i": 1, "node_j": 2, "E": 210e9, "I": 8.333333333333333e-6},
+            {"id": 2, "node_i": 2, "node_j": 3, "E": 210e9, "I": 8.333333333333333e-6}
+        ],
+        "supports": [
+            {"node": 1, "type": "fixed"},
+            {"node": 2, "type": "pinned"},
+            {"node": 3, "type": "roller"}
+        ]
+    })";
+
+    const ms2::InputModel input = ms2::InputParser::parseString(text);
+
+    REQUIRE(input.conditions.size() == 3);
+    REQUIRE(input.conditions[0].fix_v);
+    REQUIRE(input.conditions[0].fix_theta);
+    REQUIRE(input.conditions[1].fix_v);
+    REQUIRE_FALSE(input.conditions[1].fix_theta);
+    REQUIRE(input.conditions[2].fix_v);
+    REQUIRE_FALSE(input.conditions[2].fix_theta);
+}
+
+TEST_CASE("JSON parser rejects an unknown support type", "[io]") {
+    const std::string text = R"({
+        "nodes": [
+            {"id": 1, "x": 0.0, "y": 0.0},
+            {"id": 2, "x": 4.0, "y": 0.0}
+        ],
+        "elements": [
+            {"id": 1, "node_i": 1, "node_j": 2, "E": 210e9, "I": 8.333333333333333e-6}
+        ],
+        "supports": [
+            {"node": 1, "type": "spring"}
+        ]
+    })";
+
+    REQUIRE_THROWS_AS(ms2::InputParser::parseString(text), std::invalid_argument);
+}

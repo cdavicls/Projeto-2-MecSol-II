@@ -1,7 +1,7 @@
 ---
 type: content
 status: active
-updated: "2026-11-08"
+updated: "2026-11-14"
 tags: [projetos, pessoal]
 ---
 
@@ -23,8 +23,8 @@ Contrato JSON, CLI e API HTTP local.
     {"id": 1, "node_i": 1, "node_j": 2, "E": 210e9, "I": 8.333333333333333e-6}
   ],
   "supports": [
-    {"node": 1, "fix_v": true},
-    {"node": 2, "fix_v": true}
+    {"node": 1, "type": "pinned", "fix_v": true, "fix_theta": false},
+    {"node": 2, "type": "roller", "fix_v": true, "fix_theta": false}
   ],
   "nodal_loads": [
     {"node": 2, "fy": -1000.0, "mz": 0.0}
@@ -49,6 +49,7 @@ Contrato JSON, CLI e API HTTP local.
 | `elements[].E` | sim | Módulo de elasticidade em Pa |
 | `elements[].I` | sim | Momento de inércia em m⁴ |
 | `supports[].node` | sim | Nó restringido |
+| `supports[].type` | não | Tipo visual/semântico: `fixed`, `pinned` ou `roller` (aliases: `engaste`, `pino`, `rolete`) |
 | `supports[].fix_v` | não | Restringe o deslocamento vertical |
 | `supports[].fix_theta` | não | Restringe o giro |
 | `nodal_loads[].node` | sim | Nó de aplicação |
@@ -65,6 +66,9 @@ Regras:
 - IDs de nós e elementos devem ser contíguos e começar em 1.
 - Cargas pontuais nas extremidades devem ser modeladas como `nodal_loads`.
 - O elemento tem apenas DOFs `v` e `θ`; não há restrição axial explícita.
+- `type` é um atalho: `fixed` equivale a `fix_v=true, fix_theta=true`; `pinned` e `roller` equivalem a `fix_v=true, fix_theta=false`.
+- `pinned` e `roller` têm o mesmo efeito numérico neste elemento de viga, pois não existe DOF axial. A diferença é apenas visual no canvas.
+- Os campos explícitos `fix_v` e `fix_theta`, quando presentes, sobrescrevem o atalho `type`.
 
 ## Formato de saída
 
@@ -112,13 +116,13 @@ Observações:
 ./build/ms2_cli
 
 # Ler JSON e imprimir no stdout
-./build/ms2_cli -i examples/01-cantilever/input.json
+./build/ms2_cli -i examples/example-1/input.json
 
 # Salvar em arquivo
-./build/ms2_cli -i examples/01-cantilever/input.json -o /tmp/out.json
+./build/ms2_cli -i examples/example-1/input.json -o /tmp/out.json
 
 # Controlar a resolução dos diagramas
-./build/ms2_cli -i examples/01-cantilever/input.json --samples 2001
+./build/ms2_cli -i examples/example-1/input.json --samples 2001
 ```
 
 Opções:
@@ -148,11 +152,11 @@ curl http://127.0.0.1:8765/api/health
 
 curl http://127.0.0.1:8765/api/examples
 
-curl http://127.0.0.1:8765/api/examples/01-cantilever
+curl http://127.0.0.1:8765/api/examples/example-1
 
 curl -X POST \
   -H 'Content-Type: application/json' \
-  --data @examples/02-simply-supported-udl/input.json \
+  --data @examples/example-2/input.json \
   'http://127.0.0.1:8765/api/solve?samples=401'
 ```
 

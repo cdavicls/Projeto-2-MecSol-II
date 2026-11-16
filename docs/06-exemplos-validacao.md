@@ -9,6 +9,8 @@ tags: [projetos, pessoal]
 
 Os quatro exemplos usam `E = 210 GPa`, `I = 8,333333333333333e-6 m⁴` e, portanto, `EI = 1,75e6 N·m²`.
 
+Cada pasta em `examples/` segue o padrão `example-N/` e contém `input.json`, `expected.json` e `output.json`.
+
 → [Voltar ao README](Home/Projetos/MS2_projeto2/README.md)
 
 ## Como validar
@@ -31,7 +33,7 @@ O script executa a CLI para cada `input.json`, compara os campos de `expected.js
 
 ## Exemplo 1 — Cantilever
 
-Entrada: `examples/01-cantilever/input.json`.
+Entrada: `examples/example-1/input.json`.
 
 | Grandeza | Analítico | Solver | Erro relativo |
 |---|---:|---:|---:|
@@ -44,7 +46,7 @@ Entrada: `examples/01-cantilever/input.json`.
 
 ## Exemplo 2 — Simplesmente apoiada com UDL
 
-Entrada: `examples/02-simply-supported-udl/input.json`.
+Entrada: `examples/example-2/input.json`.
 
 | Grandeza | Analítico | Solver | Erro relativo |
 |---|---:|---:|---:|
@@ -56,7 +58,7 @@ Entrada: `examples/02-simply-supported-udl/input.json`.
 
 ## Exemplo 3 — Simplesmente apoiada com carga linear
 
-Entrada: `examples/03-simply-supported-linear/input.json`.
+Entrada: `examples/example-3/input.json`.
 
 | Grandeza | Analítico | Solver | Erro relativo |
 |---|---:|---:|---:|
@@ -70,7 +72,7 @@ O momento máximo ocorre em `x = L/√3 ≈ 2,309 m`; a flecha máxima ocorre em
 
 ## Exemplo 4 — Viga contínua de dois vãos
 
-Entrada: `examples/04-continuous-beam/input.json`.
+Entrada: `examples/example-4/input.json`.
 
 | Grandeza | Analítico | Solver | Erro relativo |
 |---|---:|---:|---:|

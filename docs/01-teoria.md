@@ -1,7 +1,7 @@
 ---
 type: content
 status: active
-updated: "2026-11-08"
+updated: "2026-11-14"
 tags: [projetos, pessoal]
 ---
 
@@ -114,6 +114,22 @@ f_eq = N(a)^T P
 O ponto deve satisfazer `0 < a < L`. Nas extremidades, use `nodal_loads`.
 
 No código: `Element::equivalentPointLoad(double x, double fy)`.
+
+## Tipos de apoio
+
+O JSON aceita um campo opcional `type` para tornar o apoio explícito:
+
+| `type` | `fix_v` | `fix_theta` | Reação no modelo |
+|---|---|---|---|
+| `fixed` | `true` | `true` | `Fy` e `Mz` |
+| `pinned` | `true` | `false` | apenas `Fy` |
+| `roller` | `true` | `false` | apenas `Fy` |
+
+Aliases em português: `engaste`, `pino` e `rolete`.
+
+Como o elemento tem apenas os DOFs `v` e `θ`, não existe reação horizontal `Fx`. Pino e rolete são numericamente equivalentes; a diferença é apenas o símbolo no canvas. Os campos explícitos `fix_v` e `fix_theta`, quando presentes, sobrescrevem o atalho `type`.
+
+No código: `InputParser::parseString` em `src/cpp/src/InputParser.cpp`.
 
 ## Montagem e solução
 

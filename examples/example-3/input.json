@@ -7,8 +7,8 @@
     {"id": 1, "node_i": 1, "node_j": 2, "E": 210e9, "I": 8.333333333333333e-6}
   ],
   "supports": [
-    {"node": 1, "fix_v": true, "fix_theta": false},
-    {"node": 2, "fix_v": true, "fix_theta": false}
+    {"node": 1, "fix_v": true, "fix_theta": false, "type": "pinned"},
+    {"node": 2, "fix_v": true, "fix_theta": false, "type": "roller"}
   ],
   "distributed_loads": [
     {"element": 1, "q_i": 0.0, "q_j": -1000.0}

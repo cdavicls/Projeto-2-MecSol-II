@@ -1,0 +1,1466 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazilian]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[a4paper,left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black,
+  pdftitle={Projeto 2 -- Elemento de viga Euler-Bernoulli},
+  pdfauthor={Davi Carvalho}
+}
+
+\newcommand{\unit}[1]{\,\mathrm{#1}}
+\newcommand{\dd}{\mathrm{d}}
+
+\lstdefinestyle{cpp}{
+  language=C++,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  commentstyle=\color{green!35!black},
+  stringstyle=\color{red!60!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=6pt,
+  frame=single,
+  framesep=3pt,
+  rulecolor=\color{gray!40},
+  breaklines=true,
+  breakatwhitespace=false,
+  tabsize=4,
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true,
+  extendedchars=true,
+  literate={á}{{\'a}}1 {à}{{\`a}}1 {â}{{\^a}}1 {ã}{{\~a}}1
+           {é}{{\'e}}1 {ê}{{\^e}}1 {í}{{\'i}}1 {ó}{{\'o}}1
+           {ô}{{\^o}}1 {õ}{{\~o}}1 {ú}{{\'u}}1 {ü}{{\"u}}1
+           {ç}{{\c c}}1 {Á}{{\'A}}1 {À}{{\`A}}1 {Â}{{\^A}}1
+           {Ã}{{\~A}}1 {É}{{\'E}}1 {Ê}{{\^E}}1 {Í}{{\'I}}1
+           {Ó}{{\'O}}1 {Ô}{{\^O}}1 {Õ}{{\~O}}1 {Ú}{{\'U}}1
+           {Ü}{{\"U}}1 {Ç}{{\c C}}1 {·}{{\ensuremath{\cdot}}}1,
+  captionpos=b
+}
+
+\lstdefinestyle{json}{
+  basicstyle=\ttfamily\footnotesize,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=6pt,
+  frame=single,
+  framesep=3pt,
+  rulecolor=\color{gray!40},
+  breaklines=true,
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true,
+  captionpos=b
+}
+
+\lstset{style=cpp}
+
+\title{\textbf{Projeto 2 -- Elemento de viga Euler-Bernoulli}\\
+\large Teoria da linha elástica, formulação por elementos finitos e implementação em C++}
+\author{Davi Carvalho\\SET0184 -- Mecânica dos Sólidos II -- EESC/USP}
+\date{\today}
+
+\begin{document}
+\sloppy
+
+\begin{titlepage}
+  \centering
+  {\Large Universidade de São Paulo\par}
+  {\large Escola de Engenharia de São Carlos\par}
+  {\large Departamento de Engenharia de Estruturas\par}
+  \vspace{1.5cm}
+  {\large SET0184 -- Mecânica dos Sólidos II\par}
+  \vspace{2.5cm}
+  {\Huge\bfseries Projeto 2\par}
+  \vspace{0.5cm}
+  {\LARGE Elemento de viga Euler-Bernoulli\par}
+  \vspace{0.8cm}
+  {\Large Teoria da linha elástica, formulação FEM e implementação\par}
+  \vfill
+  {\large Autor: Davi Carvalho\par}
+  {\large \today\par}
+\end{titlepage}
+
+\section*{Resumo}
+Este documento descreve a teoria da linha elástica para vigas de Euler--Bernoulli, a formulação do elemento finito de viga com quatro graus de liberdade, a montagem do sistema global, a imposição de condições de contorno e o pós-processamento de reações, esforços solicitantes e deformada. Em seguida, o texto conecta cada etapa teórica à implementação em C++ do projeto, percorrendo as classes \texttt{Section}, \texttt{Node}, \texttt{Element}, \texttt{Model}, \texttt{Assembler}, \texttt{BoundaryConditionHandler}, \texttt{LinearSolver}, \texttt{BeamSolver} e \texttt{PostProcessor}. Por fim, um exemplo de viga em balanço com carga pontual na extremidade é resolvido passo a passo, com todos os valores numéricos, e comparado com a solução analítica.
+
+\tableofcontents
+\newpage
+
+\section{Introdução}
+\label{sec:introducao}
+
+O objetivo do Projeto 2 de SET0184 é implementar o elemento de viga discutido em sala, capaz de analisar vigas com discretizações e condições de contorno diversas, submetidas simultaneamente a cargas concentradas e distribuídas. O programa deve apresentar deslocamentos, giros, reações e esforços solicitantes nos nós da malha, além de comparar os resultados com soluções de referência em pelo menos dois exemplos.
+
+A implementação deste projeto foi organizada em três camadas:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item um núcleo matemático em C++ orientado a objetos, responsável por toda a formulação de elementos finitos;
+  \item um CLI que lê e escreve JSON e serve de interface para testes e scripts;
+  \item um backend Python e uma GUI Electron que consomem o CLI por HTTP/JSON.
+\end{enumerate}
+
+Este documento concentra-se no núcleo C++, porque é nele que a teoria da linha elástica e o método dos elementos finitos são efetivamente implementados. A GUI e o backend são apenas camadas de orquestração: eles não contêm a matemática do solver.
+
+\section{Teoria da linha elástica}
+\label{sec:teoria}
+
+\subsection{Hipóteses de Euler--Bernoulli}
+
+A formulação adotada assume:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item seções transversais planas permanecem planas e normais ao eixo deformado;
+  \item pequenas deformações e pequenos giros;
+  \item material elástico linear, com módulo de elasticidade \(E\) constante por elemento;
+  \item seção transversal constante por elemento, com momento de inércia de área \(I\);
+  \item ausência de deformação por cisalhamento, de efeitos axiais e de torção;
+  \item viga horizontal, com o eixo local \(x\) coincidindo com o eixo global \(x\).
+\end{itemize}
+
+A última hipótese é uma limitação do código atual: não há transformação de coordenadas para elementos inclinados. O comprimento é calculado a partir das coordenadas dos nós, mas a matriz de rigidez é sempre escrita no referencial local horizontal.
+
+\subsection{Cinemática e deformações}
+
+Seja \(v(x)\) o deslocamento transversal da linha elástica, positivo para cima. A rotação da seção transversal é
+
+\begin{equation}
+  \theta(x) = \frac{\dd v}{\dd x} = v'(x).
+  \label{eq:theta}
+\end{equation}
+
+Com a hipótese de seções planas, o deslocamento axial de um ponto a uma distância \(y\) da linha neutra é
+
+\begin{equation}
+  u(x,y) = -y\,v'(x).
+  \label{eq:u}
+\end{equation}
+
+A deformação normal na direção \(x\) é, portanto,
+
+\begin{equation}
+  \varepsilon_x(x,y) = \frac{\partial u}{\partial x}
+  = -y\,v''(x).
+  \label{eq:epsilon}
+\end{equation}
+
+A curvatura da linha elástica é aproximadamente
+
+\begin{equation}
+  \kappa(x) = v''(x).
+  \label{eq:curvatura}
+\end{equation}
+
+\subsection{Tensões e momento fletor}
+
+Para um material elástico linear,
+
+\begin{equation}
+  \sigma_x(x,y) = E\,\varepsilon_x(x,y) = -E\,y\,v''(x).
+  \label{eq:sigma}
+\end{equation}
+
+O momento fletor resultante na seção é
+
+\begin{equation}
+  M(x) = \int_A -y\,\sigma_x(x,y)\,\dd A
+       = E\,v''(x)\int_A y^2\,\dd A
+       = EI\,v''(x),
+  \label{eq:momento}
+\end{equation}
+
+onde
+
+\begin{equation}
+  I = \int_A y^2\,\dd A
+  \label{eq:I}
+\end{equation}
+
+é o segundo momento de área (momento de inércia de área) em relação à linha neutra. A rigidez à flexão é o produto
+
+\begin{equation}
+  EI,
+  \label{eq:EI}
+\end{equation}
+
+com unidades \(\unit{N\cdot m^2}\) quando \(E\) está em \(\unit{Pa}\) e \(I\) em \(\unit{m^4}\).
+
+\subsection{Equilíbrio e equação governante}
+
+Considere um elemento diferencial de viga com carga distribuída \(q(x)\), positiva para cima. O equilíbrio de forças e de momentos fornece
+
+\begin{align}
+  \frac{\dd V}{\dd x} &= q(x), \label{eq:dV}\\
+  \frac{\dd M}{\dd x} &= V(x). \label{eq:dM}
+\end{align}
+
+Derivando a segunda equação e substituindo a primeira,
+
+\begin{equation}
+  \frac{\dd^2 M}{\dd x^2} = q(x).
+  \label{eq:d2M}
+\end{equation}
+
+Substituindo \eqref{eq:momento} em \eqref{eq:d2M}, obtém-se a equação diferencial da linha elástica:
+
+\begin{equation}
+  \boxed{EI\,\frac{\dd^4 v}{\dd x^4} = q(x)}
+  \label{eq:governante}
+\end{equation}
+
+As relações diferenciais completas são:
+
+\begin{align}
+  EI\,v''''(x) &= q(x), \label{eq:governante2}\\
+  EI\,v'''(x) &= V(x), \label{eq:V}\\
+  EI\,v''(x) &= M(x), \label{eq:M}\\
+  EI\,v'(x) &= \text{rigidez vezes giro}, \label{eq:giro}\\
+  v(x) &= \text{flecha}. \label{eq:flecha}
+\end{align}
+
+A equação \eqref{eq:governante} é de quarta ordem. Integrando quatro vezes, aparecem quatro constantes de integração:
+
+\begin{equation}
+  EI\,v(x) =
+  \iiint\!\!\iint q(x)\,\dd x\,\dd x\,\dd x\,\dd x
+  + C_0 + C_1 x + C_2 x^2 + C_3 x^3.
+  \label{eq:integracao}
+\end{equation}
+
+Para uma carga uniforme \(q\) constante,
+
+\begin{equation}
+  EI\,v(x) = \frac{q x^4}{24} + C_0 + C_1 x + C_2 x^2 + C_3 x^3.
+  \label{eq:integracao_q}
+\end{equation}
+
+As quatro constantes são determinadas pelas condições de contorno. Por isso, para um problema bem posto, são necessárias quatro condições: duas em cada extremidade da viga.
+
+\subsection{Condições de contorno}
+
+As condições de contorno podem ser essenciais (geométricas) ou naturais (de força/momento).
+
+\begin{table}[H]
+  \centering
+  \caption{Condições de contorno usuais para vigas.}
+  \label{tab:cc}
+  \footnotesize
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}p{5.2cm}@{}}
+    \toprule
+    Apoio & Condições geométricas & Condições naturais \\
+    \midrule
+    Engaste & \(v=0\), \(\theta=v'=0\) & \(M\) e \(V\) são reações \\
+    Apoio simples (pino) & \(v=0\) & \(M=EI\,v''=0\) \\
+    Apoio simples (rolo) & \(v=0\) & \(M=EI\,v''=0\) \\
+    Extremidade livre & nenhuma & \(M=EI\,v''=0\), \(V=EI\,v'''=0\) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+No método dos elementos finitos, as condições geométricas são impostas diretamente aos graus de liberdade nodais. As condições naturais aparecem automaticamente na forma fraca e são satisfeitas de forma aproximada pela solução.
+
+\subsection{Soluções analíticas de referência}
+\label{sec:analitico}
+
+Duas soluções clássicas são usadas na validação do código.
+
+\paragraph{Viga em balanço com carga pontual na extremidade.}
+Considere uma viga de comprimento \(L\), engastada em \(x=0\), com carga vertical \(P\) para baixo em \(x=L\). A flecha e o giro são
+
+\begin{align}
+  v(x) &= -\frac{P x^2}{6EI}(3L-x), \label{eq:cant_v}\\
+  \theta(x) &= -\frac{P x}{2EI}(2L-x). \label{eq:cant_theta}
+\end{align}
+
+Na extremidade livre,
+
+\begin{align}
+  v(L) &= -\frac{PL^3}{3EI}, \label{eq:cant_vL}\\
+  \theta(L) &= -\frac{PL^2}{2EI}. \label{eq:cant_thetaL}
+\end{align}
+
+\paragraph{Viga biapoiada com carga uniformemente distribuída.}
+Considere uma viga de comprimento \(L\), apoiada em \(x=0\) e \(x=L\), com carga uniforme \(q\) para baixo. A flecha é
+
+\begin{equation}
+  v(x) = -\frac{q x}{24EI}\left(L^3 - 2Lx^2 + x^3\right),
+  \label{eq:ss_udl_v}
+\end{equation}
+
+e a flecha máxima, no meio do vão, é
+
+\begin{equation}
+  v_{\max} = -\frac{5qL^4}{384EI}.
+  \label{eq:ss_udl_vmax}
+\end{equation}
+
+O momento fletor máximo, em módulo, ocorre no meio do vão:
+
+\begin{equation}
+  M_{\max} = \frac{qL^2}{8}.
+  \label{eq:ss_udl_Mmax}
+\end{equation}
+
+As reações verticais são \(qL/2\) em cada apoio.
+
+\subsection{Convenções de sinal}
+\label{sec:sinais}
+
+As convenções adotadas no projeto estão resumidas na Tabela~\ref{tab:sinais}. Elas são fixadas pelos exemplos de validação: qualquer alteração de sinal deve ser acompanhada da atualização dos arquivos \texttt{expected.json}.
+
+\begin{table}[H]
+  \centering
+  \caption{Convenções de sinal adotadas no solver.}
+  \label{tab:sinais}
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    Grandeza & Sinal positivo \\
+    \midrule
+    Deslocamento vertical \(v\) & para cima \\
+    Giro \(\theta\) & anti-horário \\
+    Carga distribuída \(q\) & para cima \\
+    Carga nodal \(f_y\) & para cima \\
+    Momento nodal \(m_z\) & anti-horário \\
+    Momento fletor \(M\) & traciona a fibra inferior (\emph{sagging}) \\
+    Cortante \(V\) & gira o elemento no sentido anti-horário \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Superposição e linearidade}
+\label{sec:superposicao}
+
+A equação da linha elástica é linear em \(v\) e em \(q\). Portanto, para pequenos deslocamentos, vale o princípio da superposição: a resposta a várias cargas é a soma das respostas a cada carga isoladamente. Se \(v_1\) corresponde a \(q_1\) e \(v_2\) a \(q_2\), então
+
+\begin{equation}
+  EI\,(v_1+v_2)'''' = q_1+q_2.
+  \label{eq:superposicao}
+\end{equation}
+
+No solver, a linearidade aparece na montagem do sistema \(\mathbf{K}\mathbf{d}=\mathbf{F}\): o vetor de cargas equivalentes é a soma das contribuições nodais, distribuídas e pontuais, e a matriz de rigidez não depende das cargas. Assim, o mesmo sistema resolve qualquer combinação linear de carregamentos sem alterar a formulação.
+
+\subsection{Limites da formulação}
+\label{sec:limites}
+
+A formulação implementada adota as hipóteses de Euler--Bernoulli: seções planas permanecem planas, a deformação por cortante é desprezada e os deslocamentos são pequenos. Essas hipóteses são adequadas para vigas esbeltas, que é o caso dos exemplos do projeto. Para vigas curtas e altas, ou para grandes deslocamentos, seria necessário usar uma teoria que inclua a deformação por cortante (Timoshenko) ou uma análise geometricamente não linear.
+
+\section{Formulação por elementos finitos}
+\label{sec:fem}
+
+\subsection{Discretização e graus de liberdade}
+
+A viga é dividida em elementos finitos conectados por nós. Cada nó possui dois graus de liberdade:
+
+\begin{equation}
+  \mathbf{d}_e =
+  \begin{bmatrix}
+    v_i \\ \theta_i \\ v_j \\ \theta_j
+  \end{bmatrix}.
+  \label{eq:de}
+\end{equation}
+
+A Figura~\ref{fig:elemento} ilustra um elemento de viga com seus graus de liberdade.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[x=1.2cm,y=1.2cm,>=Stealth]
+    \draw[thick] (0,0) -- (6,0);
+    \fill (0,0) circle (2.5pt);
+    \fill (6,0) circle (2.5pt);
+    \node[below] at (0,-0.15) {nó \(i\)};
+    \node[below] at (6,-0.15) {nó \(j\)};
+    \node[above] at (3,0.15) {elemento \(e\), comprimento \(L\)};
+    \draw[->,thick,blue] (0,0) -- (0,0.8) node[left] {\(v_i\)};
+    \draw[->,thick,red] (0,0) arc (180:120:0.8) node[left] {\(\theta_i\)};
+    \draw[->,thick,blue] (6,0) -- (6,0.8) node[right] {\(v_j\)};
+    \draw[->,thick,red] (6,0) arc (0:60:0.8) node[right] {\(\theta_j\)};
+    \draw[<->] (0,-1.1) -- (6,-1.1) node[midway,below] {\(L\)};
+    \draw[dashed] (0,0) -- (0,-1.2);
+    \draw[dashed] (6,0) -- (6,-1.2);
+  \end{tikzpicture}
+  \caption{Elemento de viga com dois nós e quatro graus de liberdade.}
+  \label{fig:elemento}
+\end{figure}
+
+No código, os índices globais dos graus de liberdade são
+
+\begin{align}
+  \operatorname{dofV}(n) &= 2(n-1), \label{eq:dofV}\\
+  \operatorname{dofTheta}(n) &= 2(n-1)+1, \label{eq:dofTheta}
+\end{align}
+
+onde \(n\) é o identificador do nó, começando em 1. Essa convenção está em \texttt{Model::dofV} e \texttt{Model::dofTheta}.
+
+\subsection{Funções de forma de Hermite}
+\label{sec:hermite}
+
+Dentro de um elemento, a flecha é interpolada a partir dos quatro valores nodais:
+
+\begin{equation}
+  v(x) = N_1(x)\,v_i + N_2(x)\,\theta_i + N_3(x)\,v_j + N_4(x)\,\theta_j.
+  \label{eq:interp}
+\end{equation}
+
+Em forma matricial,
+
+\begin{equation}
+  v(x) = \mathbf{N}(x)\,\mathbf{d}_e,
+  \qquad
+  \mathbf{N}(x) =
+  \begin{bmatrix} N_1(x) & N_2(x) & N_3(x) & N_4(x) \end{bmatrix}.
+  \label{eq:Nmat}
+\end{equation}
+
+Como o elemento tem quatro condições nodais (deslocamento e giro em cada nó), o polinômio interpolador é cúbico:
+
+\begin{equation}
+  v(x) = a_0 + a_1 x + a_2 x^2 + a_3 x^3.
+  \label{eq:cubica}
+\end{equation}
+
+As condições são
+
+\begin{align}
+  v(0) &= v_i, & v'(0) &= \theta_i, \label{eq:cond1}\\
+  v(L) &= v_j, & v'(L) &= \theta_j. \label{eq:cond2}
+\end{align}
+
+Isso gera o sistema linear
+
+\begin{equation}
+  \begin{bmatrix}
+    1 & 0 & 0 & 0\\
+    0 & 1 & 0 & 0\\
+    1 & L & L^2 & L^3\\
+    0 & 1 & 2L & 3L^2
+  \end{bmatrix}
+  \begin{bmatrix}
+    a_0\\a_1\\a_2\\a_3
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    v_i\\\theta_i\\v_j\\\theta_j
+  \end{bmatrix}.
+  \label{eq:sistema_hermite}
+\end{equation}
+
+Resolvendo e agrupando os termos em \(v_i\), \(\theta_i\), \(v_j\) e \(\theta_j\), obtêm-se as funções de forma de Hermite. Com \(\xi=x/L\),
+
+\begin{align}
+  N_1(\xi) &= 1 - 3\xi^2 + 2\xi^3, \label{eq:N1}\\
+  N_2(\xi) &= L\left(\xi - 2\xi^2 + \xi^3\right), \label{eq:N2}\\
+  N_3(\xi) &= 3\xi^2 - 2\xi^3, \label{eq:N3}\\
+  N_4(\xi) &= L\left(-\xi^2 + \xi^3\right). \label{eq:N4}
+\end{align}
+
+As propriedades nodais são:
+
+\begin{align}
+  N_1(0)&=1, & N_1(L)&=0, & N_1'(0)&=0, & N_1'(L)&=0, \label{eq:p1}\\
+  N_2(0)&=0, & N_2(L)&=0, & N_2'(0)&=1, & N_2'(L)&=0, \label{eq:p2}\\
+  N_3(0)&=0, & N_3(L)&=1, & N_3'(0)&=0, & N_3'(L)&=0, \label{eq:p3}\\
+  N_4(0)&=0, & N_4(L)&=0, & N_4'(0)&=0, & N_4'(L)&=1. \label{eq:p4}
+\end{align}
+
+As funções \(N_1\) e \(N_3\) são adimensionais e controlam deslocamentos verticais. As funções \(N_2\) e \(N_4\) têm unidade de comprimento e controlam rotações: como \(\theta\) é adimensional (radianos), o produto \(N_2\theta_i\) precisa resultar em um deslocamento.
+
+\subsection{Matriz de rigidez elementar}
+\label{sec:rigidez}
+
+A forma fraca da equação governante é obtida multiplicando \eqref{eq:governante} por uma função de teste \(\delta v\), integrando por partes duas vezes e aplicando as condições de contorno:
+
+\begin{equation}
+  \int_0^L EI\,v''\,\delta v''\,\dd x
+  =
+  \int_0^L q\,\delta v\,\dd x
+  +
+  \text{termos de contorno}.
+  \label{eq:fraca}
+\end{equation}
+
+Substituindo a interpolação \eqref{eq:interp} e usando
+
+\begin{equation}
+  v''(x) = \mathbf{B}(x)\,\mathbf{d}_e,
+  \qquad
+  \mathbf{B}(x) =
+  \begin{bmatrix}
+    N_1''(x) & N_2''(x) & N_3''(x) & N_4''(x)
+  \end{bmatrix},
+  \label{eq:B}
+\end{equation}
+
+chega-se a
+
+\begin{equation}
+  \mathbf{K}_e = \int_0^L \mathbf{B}^T EI\,\mathbf{B}\,\dd x.
+  \label{eq:Ke}
+\end{equation}
+
+A integral de \eqref{eq:Ke} com as funções de Hermite fornece a matriz clássica do elemento de viga:
+
+\begin{equation}
+  \mathbf{K}_e =
+  \frac{EI}{L^3}
+  \begin{bmatrix}
+    12   & 6L   & -12  & 6L \\
+    6L   & 4L^2 & -6L  & 2L^2 \\
+    -12  & -6L  & 12   & -6L \\
+    6L   & 2L^2 & -6L  & 4L^2
+  \end{bmatrix}.
+  \label{eq:Ke32}
+\end{equation}
+
+Essa é a Eq.~(32.17) do enunciado. No código, ela é montada em \texttt{Element::localStiffnessMatrix()} (\texttt{src/cpp/src/Element.cpp:30}).
+
+\subsection{Vetores de carga equivalentes}
+\label{sec:cargas}
+
+As cargas distribuídas e pontuais são convertidas em forças e momentos nodais equivalentes pelo princípio dos trabalhos virtuais.
+
+\paragraph{Carga distribuída linear.}
+Se a carga varia linearmente de \(q_i\) em \(x=0\) até \(q_j\) em \(x=L\), então
+
+\begin{equation}
+  q(\xi) = (1-\xi)\,q_i + \xi\,q_j.
+  \label{eq:qlinear}
+\end{equation}
+
+O vetor nodal equivalente é
+
+\begin{equation}
+  \mathbf{f}_e = \int_0^L \mathbf{N}^T q(x)\,\dd x.
+  \label{eq:fe_dist}
+\end{equation}
+
+O resultado é
+
+\begin{equation}
+  \mathbf{f}_e =
+  \begin{bmatrix}
+    \dfrac{(7q_i+3q_j)L}{20}\\[1.2ex]
+    \dfrac{(3q_i+2q_j)L^2}{60}\\[1.2ex]
+    \dfrac{(3q_i+7q_j)L}{20}\\[1.2ex]
+    -\dfrac{(2q_i+3q_j)L^2}{60}
+  \end{bmatrix}.
+  \label{eq:fe_dist_result}
+\end{equation}
+
+Para carga uniforme \(q_i=q_j=q\),
+
+\begin{equation}
+  \mathbf{f}_e =
+  \begin{bmatrix}
+    \dfrac{qL}{2}\\[1ex]
+    \dfrac{qL^2}{12}\\[1ex]
+    \dfrac{qL}{2}\\[1ex]
+    -\dfrac{qL^2}{12}
+  \end{bmatrix}.
+  \label{eq:fe_udl}
+\end{equation}
+
+\paragraph{Carga pontual interna.}
+Para uma carga pontual \(P\) aplicada em \(x=a\), com \(0<a<L\),
+
+\begin{equation}
+  \mathbf{f}_e = \mathbf{N}(a)^T P.
+  \label{eq:fe_point}
+\end{equation}
+
+Para \(a=L/2\),
+
+\begin{equation}
+  \mathbf{N}(L/2) =
+  \begin{bmatrix}
+    \dfrac{1}{2} & \dfrac{L}{8} & \dfrac{1}{2} & -\dfrac{L}{8}
+  \end{bmatrix},
+  \label{eq:Nmeio}
+\end{equation}
+
+logo
+
+\begin{equation}
+  \mathbf{f}_e =
+  \begin{bmatrix}
+    \dfrac{P}{2}\\[1ex]
+    \dfrac{PL}{8}\\[1ex]
+    \dfrac{P}{2}\\[1ex]
+    -\dfrac{PL}{8}
+  \end{bmatrix}.
+  \label{eq:fe_point_meio}
+\end{equation}
+
+Cargas pontuais nos nós devem ser informadas como cargas nodais. O parser rejeita cargas pontuais com \(x\le 0\) ou \(x\ge L\).
+
+\subsection{Montagem global}
+\label{sec:montagem}
+
+Cada elemento contribui com uma matriz \(4\times 4\) e um vetor \(4\times 1\). A montagem espalha essas contribuições nas posições globais correspondentes aos graus de liberdade do elemento:
+
+\begin{equation}
+  \mathbf{K} = \sum_{e=1}^{n_e} \mathbf{L}_e^T \mathbf{K}_e \mathbf{L}_e,
+  \qquad
+  \mathbf{F} = \sum_{e=1}^{n_e} \mathbf{L}_e^T \mathbf{f}_e,
+  \label{eq:montagem}
+\end{equation}
+
+onde \(\mathbf{L}_e\) é a matriz de conectividade local--global. No código, essa operação é feita por \texttt{Assembler::globalStiffness} e \texttt{Assembler::globalLoadVector} (\texttt{src/cpp/src/Assembler.cpp:29} e \texttt{:47}).
+
+\subsection{Condições de contorno e redução do sistema}
+\label{sec:cc}
+
+Depois da montagem, o sistema global é
+
+\begin{equation}
+  \mathbf{K}\,\mathbf{d} = \mathbf{F}.
+  \label{eq:sistema_global}
+\end{equation}
+
+Seja \(\mathbf{d}_c\) o vetor de graus de liberdade prescritos e \(\mathbf{d}_f\) o vetor de graus de liberdade livres. Particionando o sistema,
+
+\begin{equation}
+  \begin{bmatrix}
+    \mathbf{K}_{ff} & \mathbf{K}_{fc}\\
+    \mathbf{K}_{cf} & \mathbf{K}_{cc}
+  \end{bmatrix}
+  \begin{bmatrix}
+    \mathbf{d}_f\\\mathbf{d}_c
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    \mathbf{F}_f\\\mathbf{F}_c
+  \end{bmatrix}.
+  \label{eq:particao}
+\end{equation}
+
+Como no projeto os apoios prescrevem deslocamento nulo, \(\mathbf{d}_c=\mathbf{0}\). Assim,
+
+\begin{equation}
+  \mathbf{K}_{ff}\,\mathbf{d}_f = \mathbf{F}_f.
+  \label{eq:reduzido}
+\end{equation}
+
+As reações nos graus de liberdade prescritos são
+
+\begin{equation}
+  \mathbf{R}_c = \mathbf{K}_{cf}\,\mathbf{d}_f - \mathbf{F}_c.
+  \label{eq:reacoes}
+\end{equation}
+
+No código, \texttt{BoundaryConditionHandler::reduce} monta \(\mathbf{K}_{ff}\) e \(\mathbf{F}_f\), e \texttt{BoundaryConditionHandler::expand} devolve o vetor global completo, preenchendo os graus de liberdade prescritos com zero (\texttt{src/cpp/src/BoundaryCondition.cpp:9} e \texttt{:58}).
+
+\subsection{Solução do sistema linear}
+\label{sec:solver}
+
+O sistema reduzido é resolvido por eliminação de Gauss com pivoteamento parcial. O algoritmo implementado em \texttt{LinearSolver::solve} (\texttt{src/cpp/src/LinearSolver.cpp:8}) executa:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item verificação de dimensões e de matriz quadrada;
+  \item cálculo de uma escala global para a tolerância de pivotamento;
+  \item eliminação progressiva com escolha do maior pivô em cada coluna;
+  \item substituição regressiva para obter \(\mathbf{d}_f\);
+  \item lançamento de erro se a matriz for singular ou mal condicionada.
+\end{enumerate}
+
+\subsection{Pós-processamento}
+\label{sec:pos}
+
+Depois de obter os deslocamentos nodais, o pós-processamento calcula:
+
+\paragraph{Reações.}
+O resíduo global é
+
+\begin{equation}
+  \mathbf{r} = \mathbf{K}\,\mathbf{d} - \mathbf{F}.
+  \label{eq:residuo}
+\end{equation}
+
+Nos graus de liberdade livres, \(\mathbf{r}\approx\mathbf{0}\). Nos graus de liberdade prescritos, \(\mathbf{r}\) é a reação de apoio. O código calcula esse resíduo em \texttt{PostProcessor::process} (\texttt{src/cpp/src/PostProcessor.cpp:65}) e armazena as reações nodais.
+
+\paragraph{Esforços de extremidade.}
+Para cada elemento,
+
+\begin{equation}
+  \mathbf{f}_e^{\text{int}} = \mathbf{K}_e\,\mathbf{d}_e - \mathbf{f}_e^{\text{eq}},
+  \label{eq:endforces}
+\end{equation}
+
+onde \(\mathbf{f}_e^{\text{eq}}\) é o vetor de cargas equivalentes do elemento. As quatro componentes são \([F_i, M_i, F_j, M_j]\). No código, isso está em \texttt{PostProcessor.cpp:157--165}.
+
+\paragraph{Esforços internos.}
+Com \(q(x)\) linear, define-se
+
+\begin{equation}
+  q'(x) = \frac{q_j-q_i}{L}.
+  \label{eq:qslope}
+\end{equation}
+
+Para \(0\le x\le L\),
+
+\begin{align}
+  V(x) &= F_i + q_i x + \frac{1}{2}q' x^2
+         + \sum_{a<x} P, \label{eq:Vx}\\
+  M(x) &= -M_i + F_i x + \frac{1}{2}q_i x^2
+         + \frac{1}{6}q' x^3
+         + \sum_{a<x} P(x-a). \label{eq:Mx}
+\end{align}
+
+Os somatórios incluem cargas pontuais internas com \(a<x\).
+
+\paragraph{Deformada.}
+Integrando \(EI\,v''=M(x)\) e usando \(v(0)=v_i\), \(v'(0)=\theta_i\), obtém-se
+
+\begin{equation}
+  v(x) = v_i + \theta_i x
+  + \frac{1}{EI}
+  \left[
+    -\frac{1}{2}M_i x^2
+    + \frac{1}{6}F_i x^3
+    + \frac{1}{24}q_i x^4
+    + \frac{1}{120}q' x^5
+    + \sum_{a<x}\frac{P(x-a)^3}{6}
+  \right].
+  \label{eq:vx}
+\end{equation}
+
+Essa expressão é implementada em \texttt{PostProcessor.cpp:176--196}. Ela integra exatamente o momento fletor ao longo do elemento, em vez de apenas interpolar cubicamente os deslocamentos nodais. Por isso os diagramas de deformada, cortante e momento são mais precisos do que uma simples interpolação dos valores nodais.
+
+\subsection{Algoritmo completo}
+\label{sec:algoritmo}
+
+O fluxo completo do solver é:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item ler o JSON e construir nós, elementos, apoios e cargas;
+  \item calcular o comprimento de cada elemento;
+  \item montar \(\mathbf{K}\) global;
+  \item montar \(\mathbf{F}\) global;
+  \item identificar graus de liberdade prescritos e livres;
+  \item montar \(\mathbf{K}_{ff}\) e \(\mathbf{F}_f\);
+  \item resolver \(\mathbf{K}_{ff}\mathbf{d}_f=\mathbf{F}_f\);
+  \item expandir \(\mathbf{d}_f\) para o vetor global \(\mathbf{d}\);
+  \item calcular reações por \(\mathbf{K}\mathbf{d}-\mathbf{F}\);
+  \item calcular esforços de extremidade por \(\mathbf{K}_e\mathbf{d}_e-\mathbf{f}_e\);
+  \item calcular \(V(x)\), \(M(x)\) e \(v(x)\) nas posições de amostragem;
+  \item escrever o JSON de saída.
+\end{enumerate}
+
+\section{Implementação no código}
+\label{sec:codigo}
+
+\subsection{Arquitetura e responsabilidades}
+
+A Tabela~\ref{tab:classes} resume as principais classes e arquivos.
+
+\begin{table}[H]
+  \centering
+  \caption{Classes e responsabilidades no núcleo C++.}
+  \label{tab:classes}
+  \footnotesize
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{4.5cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
+    \toprule
+    Classe/arquivo & Responsabilidade & Papel no fluxo \\
+    \midrule
+    \texttt{Section} & Armazenar \(E\) e \(I\) e calcular \(EI\) & Propriedade do elemento \\
+    \texttt{Node} & Armazenar id, \(x\), \(y\) & Geometria da malha \\
+    \texttt{Element} & Comprimento, matriz local, funções de forma e cargas equivalentes & Formulação do elemento \\
+    \texttt{Model} & Lista de nós e elementos, contagem de DOFs e mapeamento global & Estrutura de dados \\
+    \texttt{Assembler} & Montagem de \(\mathbf{K}\) e \(\mathbf{F}\) globais & Sistema global \\
+    \texttt{BoundaryCondition}\newline\texttt{Handler} & Redução e expansão do sistema & Condições de contorno \\
+    \texttt{LinearSolver} & Eliminação de Gauss com pivoteamento parcial & Solução do sistema \\
+    \texttt{BeamSolver} & Orquestrar montagem, solução e pós-processamento & Fachada do solver \\
+    \texttt{PostProcessor} & Reações, esforços de extremidade e diagramas & Resultados \\
+    \texttt{InputParser} & Ler JSON e validar referências & Entrada \\
+    \texttt{OutputWriter} & Serializar resultados em JSON & Saída \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{\texttt{Section}: rigidez à flexão}
+
+\begin{lstlisting}[caption={\texttt{Section.hpp}: armazenamento de \(E\), \(I\) e cálculo de \(EI\).},label={lst:section}]
+struct Section {
+    double E = 0.0;
+    double I = 0.0;
+
+    double EI() const { return E * I; }
+};
+\end{lstlisting}
+
+O código correspondente está em \texttt{codigo/Section.hpp}. A matriz de rigidez nunca usa \(E\) ou \(I\) isoladamente: ela usa o produto \(EI\). Isso é importante porque a rigidez à flexão depende tanto do material quanto da geometria da seção.
+
+\subsection{\texttt{Node} e \texttt{Model}: geometria e DOFs}
+
+O nó armazena apenas identificador e coordenadas. O comprimento do elemento é calculado no momento em que ele é adicionado ao modelo:
+
+\lstinputlisting[style=cpp, firstline=16, lastline=34, firstnumber=16,
+  caption={\texttt{Model::addElement}: cálculo do comprimento a partir das coordenadas.},
+  label={lst:model_add}]{codigo/Model.cpp}
+
+O mapeamento de graus de liberdade está no cabeçalho:
+
+\begin{lstlisting}[caption={Mapeamento global de DOFs em \texttt{Model.hpp}.},label={lst:dofs}]
+Index dofCount() const { return 2 * nodeCount(); }
+
+static Index dofV(Index node_id) { return 2 * (node_id - 1); }
+static Index dofTheta(Index node_id) { return 2 * (node_id - 1) + 1; }
+\end{lstlisting}
+
+Assim, o nó 1 ocupa as posições 0 e 1; o nó 2 ocupa as posições 2 e 3; e assim por diante. O código usa índices internos começando em 0, mas os identificadores de nós no JSON começam em 1.
+
+\subsection{\texttt{Element::localStiffnessMatrix}: Eq.~(32.17)}
+
+\lstinputlisting[style=cpp, firstline=33, lastline=79, firstnumber=33,
+  caption={Montagem da matriz de rigidez local em \texttt{Element.cpp}.},
+  label={lst:localK}]{codigo/Element.cpp}
+
+O fator \texttt{section\_.EI() / L\^{}3} multiplica a matriz adimensional mostrada em \eqref{eq:Ke32}. O método valida que o comprimento foi definido e é positivo.
+
+\subsection{\texttt{Element::shapeFunctions}: funções de Hermite}
+
+\lstinputlisting[style=cpp, firstline=81, lastline=102, firstnumber=81,
+  caption={Funções de forma de Hermite em \texttt{Element.cpp}.},
+  label={lst:shape}]{codigo/Element.cpp}
+
+O método recebe \(x\) no referencial local do elemento, calcula \(\xi=x/L\) e devolve os quatro valores \(N_1,N_2,N_3,N_4\). Ele também valida \(0\le x\le L\).
+
+\subsection{\texttt{Element::equivalentDistributedLoad} e \texttt{equivalentPointLoad}}
+
+\lstinputlisting[style=cpp, firstline=104, lastline=132, firstnumber=104,
+  caption={Vetores de carga equivalente em \texttt{Element.cpp}.},
+  label={lst:equivalent}]{codigo/Element.cpp}
+
+O primeiro método implementa \eqref{eq:fe_dist_result}. O segundo usa diretamente \eqref{eq:fe_point}: calcula \(\mathbf{N}(x)\) e multiplica por \(f_y\).
+
+\subsection{\texttt{Assembler}: montagem global}
+
+\lstinputlisting[style=cpp, firstline=32, lastline=50, firstnumber=32,
+  caption={Montagem da matriz de rigidez global.},
+  label={lst:assemblerK}]{codigo/Assembler.cpp}
+
+\lstinputlisting[style=cpp, firstline=52, lastline=90, firstnumber=52,
+  caption={Montagem do vetor de cargas global.},
+  label={lst:assemblerF}]{codigo/Assembler.cpp}
+
+A função auxiliar \texttt{elementDofs} devolve os quatro índices globais do elemento na ordem \([v_i,\theta_i,v_j,\theta_j]\). A montagem soma cada entrada local na posição global correspondente.
+
+\subsection{\texttt{BoundaryConditionHandler}: redução e expansão}
+
+\lstinputlisting[style=cpp, firstline=9, lastline=60, firstnumber=9,
+  caption={Redução do sistema global para os graus de liberdade livres.},
+  label={lst:reduce}]{codigo/BoundaryCondition.cpp}
+
+\lstinputlisting[style=cpp, firstline=62, lastline=76, firstnumber=62,
+  caption={Expansão da solução reduzida para o vetor global.},
+  label={lst:expand}]{codigo/BoundaryCondition.cpp}
+
+A redução seleciona as linhas e colunas associadas aos DOFs livres. A expansão cria um vetor de tamanho global preenchido com zero e insere a solução nos DOFs livres. Os DOFs prescritos permanecem zero, o que corresponde a apoios com deslocamento e/ou giro nulos.
+
+\subsection{\texttt{LinearSolver}: eliminação de Gauss}
+
+\lstinputlisting[style=cpp, firstline=10, lastline=92, firstnumber=10,
+  caption={Solução do sistema linear por eliminação de Gauss com pivoteamento parcial.},
+  label={lst:linear}]{codigo/LinearSolver.cpp}
+
+O algoritmo não forma a inversa da matriz. Ele resolve diretamente o sistema, o que é mais eficiente e numericamente mais adequado.
+
+\subsection{\texttt{BeamSolver}: orquestração}
+
+\lstinputlisting[style=cpp, firstline=8, lastline=31, firstnumber=8,
+  caption={\texttt{BeamSolver::solve}: sequência completa de solução.},
+  label={lst:beamsolver}]{codigo/BeamSolver.cpp}
+
+Essa função é a fachada do solver. Ela não contém matemática própria: apenas encadeia montagem, redução, solução, expansão e pós-processamento.
+
+\subsection{\texttt{PostProcessor}: reações, esforços e deformada}
+
+\lstinputlisting[style=cpp, firstline=68, lastline=110, firstnumber=68,
+  caption={Cálculo do resíduo e das reações nodais.},
+  label={lst:residual}]{codigo/PostProcessor.cpp}
+
+\lstinputlisting[style=cpp, firstline=113, lastline=179, firstnumber=113,
+  caption={Cálculo dos esforços de extremidade de cada elemento.},
+  label={lst:endforces}]{codigo/PostProcessor.cpp}
+
+\lstinputlisting[style=cpp, firstline=187, lastline=228, firstnumber=187,
+  caption={Cálculo de \(V(x)\), \(M(x)\) e \(v(x)\) nas posições de amostragem.},
+  label={lst:diagram}]{codigo/PostProcessor.cpp}
+
+O pós-processamento é a parte que transforma o vetor de deslocamentos em resultados de engenharia: reações, cortante, momento e deformada.
+
+\subsection{\texttt{InputParser}, \texttt{OutputWriter} e \texttt{main}}
+
+\lstinputlisting[style=cpp, firstline=31, lastline=143, firstnumber=31,
+  caption={Leitura e validação do JSON de entrada.},
+  label={lst:input}]{codigo/InputParser.cpp}
+
+O campo opcional \texttt{type} do apoio é um atalho de legibilidade: \texttt{fixed} prescreve $v$ e $\theta$; \texttt{pinned} e \texttt{roller} prescrevem apenas $v$ (também aceitos como \texttt{engaste}, \texttt{pino} e \texttt{rolete}). Como o elemento não tem DOF axial, pino e rolete têm o mesmo efeito numérico; a distinção é visual no canvas.
+
+\lstinputlisting[style=cpp, firstline=16, lastline=70, firstnumber=16,
+  caption={Serialização dos resultados em JSON.},
+  label={lst:output}]{codigo/OutputWriter.cpp}
+
+\lstinputlisting[style=cpp, firstline=142, lastline=160, firstnumber=142,
+  caption={Fluxo do CLI: parse, solve e escrita.},
+  label={lst:mainflow}]{codigo/main.cpp}
+
+O CLI também possui um modo demo, sem argumentos, que resolve uma viga em balanço e imprime a comparação com a solução analítica.
+
+\section{Exemplo passo a passo: viga em balanço}
+\label{sec:exemplo}
+
+Nesta seção, o exemplo \texttt{examples/example-1} é resolvido manualmente e acompanhado no código. A viga tem comprimento \(L=4\unit{m}\), seção com \(E=210\unit{GPa}\) e \(I=8{,}333333333333333\times10^{-6}\unit{m^4}\), engaste no nó 1 e carga vertical \(P=1000\unit{N}\) para baixo no nó 2.
+
+\subsection{Dados de entrada}
+
+\lstinputlisting[style=json,
+  caption={Arquivo \texttt{examples/example-1/input.json}.},
+  label={lst:inputjson}]{codigo/cantilever-input.json}
+
+\subsection{Passo 1: leitura do JSON}
+
+O \texttt{main} chama \texttt{InputParser::parseFile} (\texttt{src/cpp/main.cpp:129}). O parser:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item cria os nós 1 e 2 com coordenadas \((0,0)\) e \((4,0)\);
+  \item cria o elemento 1, com nós \(i=1\), \(j=2\), \(E=210\times10^9\unit{Pa}\) e \(I=8{,}333333333333333\times10^{-6}\unit{m^4}\);
+  \item cria o apoio do nó 1 com \texttt{type=fixed}, que equivale a \texttt{fix\_v=true} e \texttt{fix\_theta=true};
+  \item cria a carga nodal do nó 2 com \(f_y=-1000\unit{N}\) e \(m_z=0\).
+\end{enumerate}
+
+\subsection{Passo 2: comprimento e rigidez à flexão}
+
+Ao adicionar o elemento, \texttt{Model::addElement} calcula
+
+\begin{equation}
+  L = \sqrt{(4-0)^2+(0-0)^2}=4\unit{m}.
+  \label{eq:ex_L}
+\end{equation}
+
+A rigidez à flexão é
+
+\begin{equation}
+  EI = 210\times10^9 \times 8{,}333333333333333\times10^{-6}
+     = 1{,}75\times10^6\unit{N\cdot m^2}.
+  \label{eq:ex_EI}
+\end{equation}
+
+O fator da matriz local é
+
+\begin{equation}
+  \frac{EI}{L^3} = \frac{1{,}75\times10^6}{64}
+  = 27{,}343{,}75\unit{N/m}.
+  \label{eq:ex_factor}
+\end{equation}
+
+\subsection{Passo 3: matriz de rigidez local}
+
+Substituindo \(L=4\) e \(EI/L^3=27{,}343{,}75\) em \eqref{eq:Ke32}, obtém-se
+
+\begin{equation}
+  \mathbf{K}_e =
+  \begin{bmatrix}
+    328125 & 656250 & -328125 & 656250\\
+    656250 & 1750000 & -656250 & 875000\\
+    -328125 & -656250 & 328125 & -656250\\
+    656250 & 875000 & -656250 & 1750000
+  \end{bmatrix}.
+  \label{eq:ex_Ke}
+\end{equation}
+
+Como há apenas um elemento, a matriz global é igual à matriz local:
+
+\begin{equation}
+  \mathbf{K} = \mathbf{K}_e.
+  \label{eq:ex_Kglobal}
+\end{equation}
+
+\subsection{Passo 4: vetor de cargas global}
+
+A carga nodal é aplicada diretamente no DOF vertical do nó 2. A ordem global é
+
+\begin{equation}
+  \mathbf{d} =
+  \begin{bmatrix}
+    v_1 & \theta_1 & v_2 & \theta_2
+  \end{bmatrix}^T.
+  \label{eq:ex_d}
+\end{equation}
+
+Portanto,
+
+\begin{equation}
+  \mathbf{F} =
+  \begin{bmatrix}
+    0\\0\\-1000\\0
+  \end{bmatrix}\unit{N}.
+  \label{eq:ex_F}
+\end{equation}
+
+Não há carga distribuída nem carga pontual interna neste exemplo, então \texttt{equivalentDistributedLoad} e \texttt{equivalentPointLoad} não contribuem.
+
+\subsection{Passo 5: condições de contorno}
+
+O nó 1 está engastado:
+
+\begin{equation}
+  v_1=0, \qquad \theta_1=0.
+  \label{eq:ex_cc}
+\end{equation}
+
+Os graus de liberdade livres são \(v_2\) e \(\theta_2\). Na notação da partição,
+
+\begin{equation}
+  \mathbf{d}_f =
+  \begin{bmatrix}
+    v_2\\\theta_2
+  \end{bmatrix},
+  \qquad
+  \mathbf{d}_c =
+  \begin{bmatrix}
+    v_1\\\theta_1
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    0\\0
+  \end{bmatrix}.
+  \label{eq:ex_part}
+\end{equation}
+
+\subsection{Passo 6: sistema reduzido}
+
+Selecionando as linhas e colunas 3 e 4 (índices internos 2 e 3),
+
+\begin{equation}
+  \mathbf{K}_{ff} =
+  \begin{bmatrix}
+    328125 & -656250\\
+    -656250 & 1750000
+  \end{bmatrix},
+  \qquad
+  \mathbf{F}_f =
+  \begin{bmatrix}
+    -1000\\0
+  \end{bmatrix}.
+  \label{eq:ex_reduced}
+\end{equation}
+
+O sistema a resolver é
+
+\begin{equation}
+  \begin{bmatrix}
+    328125 & -656250\\
+    -656250 & 1750000
+  \end{bmatrix}
+  \begin{bmatrix}
+    v_2\\\theta_2
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    -1000\\0
+  \end{bmatrix}.
+  \label{eq:ex_system}
+\end{equation}
+
+\subsection{Passo 7: solução}
+
+Resolvendo o sistema \(2\times2\),
+
+\begin{align}
+  v_2 &= -0{,}01219047619047619\unit{m}, \label{eq:ex_v2}\\
+  \theta_2 &= -0{,}004571428571428572\unit{rad}. \label{eq:ex_theta2}
+\end{align}
+
+O sinal negativo indica que o nó 2 desce e gira no sentido horário, coerente com a carga para baixo.
+
+\subsection{Passo 8: expansão do vetor de deslocamentos}
+
+O vetor global completo é
+
+\begin{equation}
+  \mathbf{d} =
+  \begin{bmatrix}
+    0\\0\\-0{,}01219047619047619\\-0{,}004571428571428572
+  \end{bmatrix}.
+  \label{eq:ex_dfull}
+\end{equation}
+
+\subsection{Passo 9: reações de apoio}
+
+O resíduo global é
+
+\begin{equation}
+  \mathbf{r} = \mathbf{K}\mathbf{d}-\mathbf{F}.
+  \label{eq:ex_residual}
+\end{equation}
+
+Nos DOFs do nó 1, o resíduo fornece
+
+\begin{align}
+  R_{1y} &= 1000\unit{N}, \label{eq:ex_Ry}\\
+  R_{1m} &= 4000\unit{N\cdot m}. \label{eq:ex_Rm}
+\end{align}
+
+Nos DOFs livres, o resíduo é nulo (a menos de erro numérico). A reação vertical é igual à carga aplicada, e o momento reativo é \(PL=1000\times4=4000\unit{N\cdot m}\), como esperado para uma viga em balanço.
+
+\subsection{Passo 10: esforços de extremidade}
+
+Para o elemento, \(\mathbf{f}_e^{\text{eq}}=\mathbf{0}\), então
+
+\begin{equation}
+  \mathbf{f}_e^{\text{int}} = \mathbf{K}_e\mathbf{d}_e
+  =
+  \begin{bmatrix}
+    1000\\4000\\-1000\\0
+  \end{bmatrix}.
+  \label{eq:ex_endforces}
+\end{equation}
+
+A interpretação é:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \(F_i=1000\unit{N}\): força vertical no nó \(i\);
+  \item \(M_i=4000\unit{N\cdot m}\): momento nodal no nó \(i\);
+  \item \(F_j=-1000\unit{N}\): força vertical no nó \(j\);
+  \item \(M_j=0\): momento nodal no nó \(j\).
+\end{itemize}
+
+Cuidado com o sinal: \(M_i=4000\unit{N\cdot m}\) é o momento nodal de extremidade. O momento fletor interno no engaste é \(-4000\unit{N\cdot m}\) na convenção \emph{sagging} positiva, porque a fórmula \eqref{eq:Mx} começa com \(-M_i\).
+
+\subsection{Passo 11: diagramas}
+
+Com \(F_i=1000\unit{N}\), \(M_i=4000\unit{N\cdot m}\), \(q_i=q_j=0\) e nenhuma carga pontual interna,
+
+\begin{align}
+  V(x) &= 1000\unit{N}, \label{eq:ex_V}\\
+  M(x) &= -4000 + 1000x \quad (\unit{N\cdot m}). \label{eq:ex_M}
+\end{align}
+
+Assim,
+
+\begin{align}
+  M(0) &= -4000\unit{N\cdot m}, \label{eq:ex_M0}\\
+  M(4) &= 0. \label{eq:ex_M4}
+\end{align}
+
+A deformada é
+
+\begin{equation}
+  v(x) = \frac{-2000x^2 + 166{,}6667x^3}{1{,}75\times10^6}.
+  \label{eq:ex_vx}
+\end{equation}
+
+No nó 2,
+
+\begin{equation}
+  v(4) = \frac{-2000(16)+166{,}6667(64)}{1{,}75\times10^6}
+       = -0{,}01219047619047619\unit{m}.
+  \label{eq:ex_v4}
+\end{equation}
+
+\subsection{Passo 12: comparação com a solução analítica}
+
+A solução analítica para a viga em balanço com carga na extremidade é
+
+\begin{align}
+  v(L) &= -\frac{PL^3}{3EI}
+        = -\frac{1000\times4^3}{3\times1{,}75\times10^6}
+        = -0{,}01219047619047619\unit{m}, \label{eq:ex_analitico_v}\\
+  \theta(L) &= -\frac{PL^2}{2EI}
+        = -\frac{1000\times4^2}{2\times1{,}75\times10^6}
+        = -0{,}004571428571428572\unit{rad}. \label{eq:ex_analitico_theta}
+\end{align}
+
+Os valores coincidem com os obtidos pelo FEM. O erro é da ordem do erro de arredondamento de ponto flutuante.
+
+\subsection{Passo 13: saída JSON}
+
+O \texttt{OutputWriter} serializa:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{displacements}: \(v\) e \(\theta\) por nó;
+  \item \texttt{reactions}: \(f_y\) e \(m_z\) por nó;
+  \item \texttt{elements}: esforços de extremidade e vetores \texttt{x}, \texttt{shear}, \texttt{moment}, \texttt{deflection};
+  \item \texttt{maxima}: máximos absolutos de flecha, cortante e momento.
+\end{itemize}
+
+O arquivo \texttt{examples/example-1/output.json} é gerado pelo CLI e comparado com \texttt{expected.json} pelo script \texttt{scripts/validate\_examples.py}.
+
+\subsection{Resumo do caminho no código}
+
+\begin{table}[H]
+  \centering
+  \caption{Caminho percorrido pelo exemplo no código.}
+  \label{tab:caminho}
+  \footnotesize
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.2cm}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{4.0cm}>{\raggedright\arraybackslash}p{4.5cm}@{}}
+    \toprule
+    Passo & Arquivo & Função & O que faz \\
+    \midrule
+    1 & \texttt{main.cpp} & \texttt{main} & Lê argumentos e chama o parser \\
+    2 & \texttt{InputParser.cpp} & \texttt{parseFile/parseString} & Constrói modelo, apoios e cargas \\
+    3 & \texttt{Model.cpp} & \texttt{addElement} & Calcula \(L\) \\
+    4 & \texttt{BeamSolver.cpp} & \texttt{solve} & Orquestra o cálculo \\
+    5 & \texttt{Assembler.cpp} & \texttt{globalStiffness} & Monta \(\mathbf{K}\) \\
+    6 & \texttt{Assembler.cpp} & \texttt{globalLoadVector} & Monta \(\mathbf{F}\) \\
+    7 & \texttt{BoundaryCondition.cpp} & \texttt{reduce} & Monta \(\mathbf{K}_{ff}\), \(\mathbf{F}_f\) \\
+    8 & \texttt{LinearSolver.cpp} & \texttt{solve} & Resolve \(\mathbf{K}_{ff}\mathbf{d}_f=\mathbf{F}_f\) \\
+    9 & \texttt{BoundaryCondition.cpp} & \texttt{expand} & Devolve \(\mathbf{d}\) global \\
+    10 & \texttt{PostProcessor.cpp} & \texttt{process} & Reações, esforços e diagramas \\
+    11 & \texttt{OutputWriter.cpp} & \texttt{toJson} & Serializa a saída \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Segundo exemplo: carga distribuída}
+\label{sec:exemplo2}
+
+Para mostrar o uso das funções de forma na conversão de cargas distribuídas, considere a viga biapoiada do arquivo \texttt{examples/example-2}: \(L=4\unit{m}\), \(E=210\unit{GPa}\), \(I=8{,}333333333333333\times10^{-6}\unit{m^4}\), apoio tipo pino no nó 1, apoio tipo rolete no nó 2 e carga uniforme \(q=-1000\unit{N/m}\) (para baixo).
+
+O vetor de carga equivalente é obtido de \eqref{eq:fe_udl} com \(q_i=q_j=-1000\):
+
+\begin{equation}
+  \mathbf{f}_e =
+  \begin{bmatrix}
+    -2000\\
+    -1333{,}3333\\
+    -2000\\
+    1333{,}3333
+  \end{bmatrix}.
+  \label{eq:ex2_fe}
+\end{equation}
+
+As condições de contorno são \(v_1=v_2=0\), com \(\theta_1\) e \(\theta_2\) livres. Resolvendo o sistema, obtém-se
+
+\begin{align}
+  \theta_1 &= -0{,}0015238095238095239\unit{rad}, \label{eq:ex2_theta1}\\
+  \theta_2 &= 0{,}0015238095238095239\unit{rad}. \label{eq:ex2_theta2}
+\end{align}
+
+As reações verticais são \(2000\unit{N}\) em cada apoio. O momento máximo é
+
+\begin{equation}
+  M_{\max} = \frac{qL^2}{8}
+  = \frac{1000\times16}{8}
+  = 2000\unit{N\cdot m},
+  \label{eq:ex2_Mmax}
+\end{equation}
+
+e a flecha máxima é
+
+\begin{equation}
+  v_{\max} = -\frac{5qL^4}{384EI}
+  = -\frac{5\times1000\times256}{384\times1{,}75\times10^6}
+  = -0{,}0019047619047619048\unit{m}.
+  \label{eq:ex2_vmax}
+\end{equation}
+
+Esses valores coincidem com \texttt{examples/example-2/expected.json}. Esse exemplo evidencia por que as funções de forma são necessárias: a carga distribuída não é aplicada diretamente como força nodal; ela é convertida em um vetor consistente por \eqref{eq:fe_dist}.
+
+\section{Validação e resultados}
+\label{sec:validacao}
+
+O projeto possui quatro exemplos de validação:
+
+\begin{table}[H]
+  \centering
+  \caption{Exemplos de validação do solver.}
+  \label{tab:exemplos}
+  \footnotesize
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.3cm}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
+    \toprule
+    Exemplo & Descrição & Verificações principais \\
+    \midrule
+    01 & Viga em balanço com carga pontual na extremidade & Reações, flecha e giro na extremidade, máximos \\
+    02 & Viga biapoiada com carga uniforme & Reações, giros, momento máximo e flecha máxima \\
+    03 & Viga biapoiada com carga linearmente variável & Reações, cortante máximo, momento e flecha máximos \\
+    04 & Viga contínua com múltiplos elementos & Continuidade, reações e diagramas \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+A validação é executada por \texttt{scripts/validate\_examples.py}, que roda o CLI para cada exemplo, lê o JSON de saída e compara os valores com \texttt{expected.json}. A tolerância relativa padrão é \(10^{-6}\), com tolerância absoluta \(10^{-9}\). O script verifica 26 grandezas numéricas nos quatro exemplos.
+
+Além disso, o projeto possui testes automatizados com CTest:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{ms2\_tests}: 18 casos de teste Catch2, com 80 asserções, cobrindo matriz, elemento, viga em balanço, exemplos e I/O;
+  \item \texttt{ms2\_backend}: 6 casos de teste da API Python e da integração com o CLI.
+\end{itemize}
+
+Os testes C++ verificam, entre outros pontos:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item simetria e dimensão da matriz de rigidez local;
+  \item valores das funções de forma nos nós;
+  \item equivalência entre a solução FEM e a solução analítica da viga em balanço;
+  \item leitura e escrita JSON;
+  \item comportamento dos quatro exemplos.
+\end{itemize}
+
+\section{Conclusão}
+\label{sec:conclusao}
+
+O projeto implementa o elemento de viga de Euler--Bernoulli da Eq.~(32.17) a partir da teoria da linha elástica. As funções de forma de Hermite fornecem a interpolação cúbica de \(v(x)\), a matriz de rigidez elementar e os vetores de carga equivalentes. A montagem global, a redução do sistema pelas condições de contorno, a solução por eliminação de Gauss e o pós-processamento produzem deslocamentos, giros, reações, cortante, momento e deformada.
+
+O exemplo da viga em balanço mostra que o resultado do FEM coincide com a solução analítica para o caso de um elemento. O exemplo da viga biapoiada com carga uniforme mostra a importância das funções de forma na conversão de cargas distribuídas em cargas nodais consistentes.
+
+Como limitações, o código atual não realiza transformação de coordenadas para elementos inclinados e não considera deformação por cisalhamento (viga de Timoshenko), efeitos axiais ou torção. Essas hipóteses são adequadas ao escopo do Projeto 2 e ao elemento de viga discutido em sala.
+
+\appendix
+
+\section{Formulário resumido}
+\label{app:formulario}
+
+\begin{align}
+  \theta &= v', \label{eq:app_theta}\\
+  M &= EI\,v'', \label{eq:app_M}\\
+  V &= EI\,v''', \label{eq:app_V}\\
+  q &= EI\,v''''. \label{eq:app_q}
+\end{align}
+
+Funções de forma, com \(\xi=x/L\):
+
+\begin{align}
+  N_1 &= 1-3\xi^2+2\xi^3, \\
+  N_2 &= L(\xi-2\xi^2+\xi^3), \\
+  N_3 &= 3\xi^2-2\xi^3, \\
+  N_4 &= L(-\xi^2+\xi^3).
+\end{align}
+
+Matriz de rigidez:
+
+\begin{equation}
+  \mathbf{K}_e =
+  \frac{EI}{L^3}
+  \begin{bmatrix}
+    12 & 6L & -12 & 6L\\
+    6L & 4L^2 & -6L & 2L^2\\
+    -12 & -6L & 12 & -6L\\
+    6L & 2L^2 & -6L & 4L^2
+  \end{bmatrix}.
+\end{equation}
+
+Carga distribuída linear:
+
+\begin{equation}
+  \mathbf{f}_e =
+  \begin{bmatrix}
+    (7q_i+3q_j)L/20\\
+    (3q_i+2q_j)L^2/60\\
+    (3q_i+7q_j)L/20\\
+    -(2q_i+3q_j)L^2/60
+  \end{bmatrix}.
+\end{equation}
+
+Carga pontual em \(x=a\):
+
+\begin{equation}
+  \mathbf{f}_e = \mathbf{N}(a)^T P.
+\end{equation}
+
+\section{Compilação e execução}
+\label{app:execucao}
+
+\subsection{Build e testes}
+
+\begin{verbatim}
+chmod +x scripts/build.sh
+./scripts/build.sh Debug
+\end{verbatim}
+
+O script configura o CMake, compila o projeto e executa o CTest. Também é possível rodar manualmente:
+
+\begin{verbatim}
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build -j
+ctest --test-dir build --output-on-failure
+\end{verbatim}
+
+\subsection{CLI}
+
+\begin{verbatim}
+./build/ms2_cli --input examples/example-1/input.json \
+                --output /tmp/output.json \
+                --samples 401
+\end{verbatim}
+
+Sem argumentos, o CLI executa uma demonstração de viga em balanço e imprime a comparação com a solução analítica.
+
+\subsection{Validação dos exemplos}
+
+\begin{verbatim}
+python3 scripts/validate_examples.py
+\end{verbatim}
+
+\subsection{GUI}
+
+\begin{verbatim}
+cd src/electron
+npm install
+npm start
+\end{verbatim}
+
+A GUI inicia o backend Python automaticamente e permite editar o JSON, importar/exportar arquivos, selecionar exemplos e visualizar modelo, deformada, cortante e momento.
+
+\subsection{Overleaf}
+
+Este projeto LaTeX é autocontido. Basta enviar o arquivo ZIP para o Overleaf e compilar \texttt{main.tex} com pdfLaTeX. Os arquivos de código usados nos listings estão na pasta \texttt{codigo/}. Não há dependência de imagens externas; as figuras são feitas com TikZ.
+
+\begin{thebibliography}{9}
+
+\bibitem{timoshenko}
+S.~P. Timoshenko and J.~M. Gere.
+\newblock \emph{Mechanics of Materials}.
+\newblock Van Nostrand Reinhold, 1972.
+
+\bibitem{hibbeler}
+R.~C. Hibbeler.
+\newblock \emph{Mechanics of Materials}.
+\newblock Pearson, 10th edition, 2017.
+
+\bibitem{cook}
+R.~D. Cook, D.~S. Malkus, M.~E. Plesha, and R.~J. Witt.
+\newblock \emph{Concepts and Applications of Finite Element Analysis}.
+\newblock Wiley, 4th edition, 2002.
+
+\bibitem{bathe}
+K.-J. Bathe.
+\newblock \emph{Finite Element Procedures}.
+\newblock Prentice Hall, 1996.
+
+\bibitem{zienkiewicz}
+O.~C. Zienkiewicz and R.~L. Taylor.
+\newblock \emph{The Finite Element Method for Solid and Structural Mechanics}.
+\newblock Elsevier, 6th edition, 2005.
+
+\bibitem{enunciado}
+SET0184 -- Mecânica dos Sólidos II.
+\newblock \emph{Projeto 2: elemento de viga}.
+\newblock EESC/USP, 2026.
+
+\end{thebibliography}
+
+\end{document}

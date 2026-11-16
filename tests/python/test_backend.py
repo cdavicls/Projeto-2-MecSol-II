@@ -62,11 +62,11 @@ class BackendTest(unittest.TestCase):
         status, payload = self.get_json("/api/examples")
         self.assertEqual(status, 200)
         names = {example["name"] for example in payload["examples"]}
-        self.assertIn("01-cantilever", names)
-        self.assertIn("04-continuous-beam", names)
+        self.assertIn("example-1", names)
+        self.assertIn("example-4", names)
 
     def test_example_input(self) -> None:
-        status, payload = self.get_json("/api/examples/01-cantilever")
+        status, payload = self.get_json("/api/examples/example-1")
         self.assertEqual(status, 200)
         self.assertEqual(len(payload["nodes"]), 2)
         self.assertEqual(len(payload["elements"]), 1)

@@ -1,7 +1,7 @@
 ---
 type: content
 status: active
-updated: "2026-11-08"
+updated: "2026-11-14"
 tags: [projetos, pessoal]
 ---
 
@@ -61,6 +61,7 @@ electron39 . --no-sandbox
 ### Canvas
 
 - **Modelo:** geometria, nós, apoios, cargas nodais, distribuídas e pontuais.
+- Apoios são desenhados conforme `type`: engaste (`fixed`), pino (`pinned`) e rolete (`roller`). Pino e rolete têm o mesmo efeito numérico neste solver, mas símbolos diferentes no canvas.
 - **Deformada:** configuração original tracejada e deformada ampliada.
 - **Cortante:** diagrama `V(x)` preenchido.
 - **Momento:** diagrama `M(x)` preenchido.

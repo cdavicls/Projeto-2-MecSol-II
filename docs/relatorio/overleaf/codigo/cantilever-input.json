@@ -1,0 +1,15 @@
+{
+  "nodes": [
+    {"id": 1, "x": 0.0, "y": 0.0},
+    {"id": 2, "x": 4.0, "y": 0.0}
+  ],
+  "elements": [
+    {"id": 1, "node_i": 1, "node_j": 2, "E": 210e9, "I": 8.333333333333333e-6}
+  ],
+  "supports": [
+    {"node": 1, "type": "fixed", "fix_v": true, "fix_theta": true}
+  ],
+  "nodal_loads": [
+    {"node": 2, "fy": -1000.0, "mz": 0.0}
+  ]
+}

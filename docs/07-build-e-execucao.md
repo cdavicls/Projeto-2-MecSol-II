@@ -52,10 +52,10 @@ ctest --test-dir build --output-on-failure
 ./build/ms2_cli
 
 # Resolver um exemplo
-./build/ms2_cli -i examples/01-cantilever/input.json
+./build/ms2_cli -i examples/example-1/input.json
 
 # Salvar resultado
-./build/ms2_cli -i examples/01-cantilever/input.json -o /tmp/out.json
+./build/ms2_cli -i examples/example-1/input.json -o /tmp/out.json
 
 # Ajuda
 ./build/ms2_cli --help
