@@ -123,6 +123,12 @@ Observações:
 
 # Controlar a resolução dos diagramas
 ./build/ms2_cli -i examples/example-1/input.json --samples 2001
+
+# Enviar o JSON diretamente como texto
+./build/ms2_cli -it "$(cat examples/example-1/input.json)"
+
+# Imprimir apenas os deslocamentos nodais
+./build/ms2_cli -i examples/example-1/input.json -od
 ```
 
 Opções:
@@ -130,9 +136,13 @@ Opções:
 | Opção | Descrição |
 |---|---|
 | `-i`, `--input` | Arquivo JSON de entrada |
+| `-it`, `--input-text` | Texto JSON de entrada |
 | `-o`, `--output` | Arquivo JSON de saída |
 | `-s`, `--samples` | Amostras por elemento (padrão 101) |
+| `-od`, `--only-displacements` | Imprime apenas `v` e `theta` por nó no terminal |
 | `-h`, `--help` | Ajuda |
+
+`--input` e `--input-text` são mutuamente exclusivos. Com `--only-displacements`, o JSON completo ainda é gravado quando `--output` é informado; sem `--output`, apenas a tabela de deslocamentos vai para o terminal.
 
 ## API HTTP
 

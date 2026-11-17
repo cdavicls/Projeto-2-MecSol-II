@@ -1,5 +1,5 @@
 {
-  "description": "Cantilever with a tip point load",
+  "description": "Exemplo Simples( Uma barra engastada e uma força)",
   "tolerance": 1e-6,
   "checks": {
     "reactions[0].fy": 1000.0,

@@ -33,7 +33,7 @@ flowchart LR
 | Camada | Responsabilidade | Não faz |
 |---|---|---|
 | `ms2_core` | Elemento, montagem, CCs, solver, pós-processamento | Não lê arquivos nem conhece HTTP |
-| `ms2_cli` | Ler JSON, chamar o solver, escrever JSON | Não contém matemática |
+| `ms2_cli` | Ler JSON de arquivo ou texto, chamar o solver, escrever JSON | Não contém matemática |
 | Backend Python | Servir a API local, executar a CLI, tratar erros | Não contém matemática |
 | Electron renderer | Editar modelo, visualizar resultados e diagramas | Não calcula esforços |
 

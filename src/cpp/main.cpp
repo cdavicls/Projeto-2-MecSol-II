@@ -9,8 +9,8 @@
 #include "ms2/OutputWriter.hpp"
 
 // Interface de linha de comando do solver.
-// Sem argumentos, executa uma demonstração de viga em balanço; com --input,
-// lê um modelo JSON, resolve e imprime/grava o resultado.
+// Sem argumentos, executa uma demonstração de viga em balanço; com --input ou
+// --input-text, lê um modelo JSON, resolve e imprime/grava o resultado.
 
 namespace {
 
@@ -20,10 +20,12 @@ void printUsage() {
         << "Usage: ms2_cli [options]\n"
         << "\n"
         << "Options:\n"
-        << "  -i, --input <file>   Read the model from a JSON file\n"
-        << "  -o, --output <file>  Write the results to a JSON file (default: stdout)\n"
-        << "  -s, --samples <n>    Samples per element for diagrams (default: 101)\n"
-        << "  -h, --help           Show this help\n"
+        << "  -i, --input <file>        Read the model from a JSON file\n"
+        << "  -it, --input-text <json>  Read the model from a JSON string\n"
+        << "  -o, --output <file>       Write the results to a JSON file (default: stdout)\n"
+        << "  -s, --samples <n>         Samples per element for diagrams (default: 101)\n"
+        << "  -od, --only-displacements Print only nodal displacements to the terminal\n"
+        << "  -h, --help                Show this help\n"
         << "\n"
         << "With no arguments, runs the built-in cantilever demo.\n";
 }
@@ -67,6 +69,17 @@ int runDemo() {
     return 0;
 }
 
+void printDisplacements(const ms2::AnalysisResult& result) {
+    // Saída compacta para inspeção rápida no terminal, sem o JSON completo.
+    std::cout << std::scientific << std::setprecision(6);
+    std::cout << "node" << std::setw(18) << "v (m)" << std::setw(20) << "theta (rad)" << '\n';
+    for (const ms2::NodalResult& node : result.nodes) {
+        std::cout << std::setw(4) << node.node_id
+                  << std::setw(18) << node.v
+                  << std::setw(20) << node.theta << '\n';
+    }
+}
+
 }
 
 int main(int argc, char** argv) {
@@ -77,8 +90,12 @@ int main(int argc, char** argv) {
 
     // Valores padrão dos argumentos de linha de comando.
     std::string input_path;
+    std::string input_text;
     std::string output_path;
     std::size_t samples_per_element = 101;
+    bool has_input_path = false;
+    bool has_input_text = false;
+    bool only_displacements = false;
 
     // Parser manual simples; cada opção consome o próximo argumento.
     for (int i = 1; i < argc; ++i) {
@@ -88,12 +105,22 @@ int main(int argc, char** argv) {
             printUsage();
             return 0;
         }
+        if (argument == "-it" || argument == "--input-text") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: missing value for " << argument << "\n";
+                return 1;
+            }
+            input_text = argv[++i];
+            has_input_text = true;
+            continue;
+        }
         if (argument == "-i" || argument == "--input") {
             if (i + 1 >= argc) {
                 std::cerr << "Error: missing value for " << argument << "\n";
                 return 1;
             }
             input_path = argv[++i];
+            has_input_path = true;
             continue;
         }
         if (argument == "-o" || argument == "--output") {
@@ -122,9 +149,14 @@ int main(int argc, char** argv) {
             }
             continue;
         }
+        if (argument == "-od" || argument == "--only-displacements") {
+            only_displacements = true;
+            continue;
+        }
         // Um argumento sem "-" é tratado como caminho de entrada posicional.
         if (!argument.empty() && argument.front() != '-') {
             input_path = argument;
+            has_input_path = true;
             continue;
         }
 
@@ -133,24 +165,35 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    if (input_path.empty()) {
-        std::cerr << "Error: no input file provided\n";
+    //Tratamento de Entrada
+    if (has_input_path && has_input_text) {
+        std::cerr << "Error: use either --input or --input-text, not both\n";
+        return 1;
+    }
+    if (!has_input_path && !has_input_text) {
+        std::cerr << "Error: no input provided\n";
         printUsage();
         return 1;
     }
 
     try {
-        // Lê o JSON, resolve o modelo e serializa o resultado.
-        const ms2::InputModel input = ms2::InputParser::parseFile(input_path);
+        // Lê o JSON do arquivo ou do texto, resolve o modelo e serializa o resultado.
+        const ms2::InputModel input = has_input_text
+            ? ms2::InputParser::parseString(input_text)
+            : ms2::InputParser::parseFile(input_path);
         const ms2::AnalysisResult result = ms2::BeamSolver::solve(
             input.model, input.loads, input.conditions, samples_per_element);
 
-        if (output_path.empty()) {
-            // Sem --output, o JSON vai para stdout.
-            std::cout << ms2::OutputWriter::toJson(result) << '\n';
-        } else {
-            // Com --output, o JSON é gravado no arquivo indicado.
+        if (only_displacements) {
+            // Modo compacto: imprime apenas v e theta por nó.
+            printDisplacements(result);
+        }
+        if (!output_path.empty()) {
+            // Com --output, o JSON completo é gravado no arquivo indicado.
             ms2::OutputWriter::writeFile(output_path, result);
+        } else if (!only_displacements) {
+            // Sem --output e sem --only-displacements, o JSON vai para stdout.
+            std::cout << ms2::OutputWriter::toJson(result) << '\n';
         }
     } catch (const std::exception& error) {
         // Qualquer erro de parsing, validação ou resolução vira mensagem e

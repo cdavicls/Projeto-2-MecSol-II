@@ -922,7 +922,7 @@ O campo opcional \texttt{type} do apoio é um atalho de legibilidade: \texttt{fi
   caption={Serialização dos resultados em JSON.},
   label={lst:output}]{codigo/OutputWriter.cpp}
 
-\lstinputlisting[style=cpp, firstline=142, lastline=160, firstnumber=142,
+\lstinputlisting[style=cpp, firstline=178, lastline=202, firstnumber=178,
   caption={Fluxo do CLI: parse, solve e escrita.},
   label={lst:mainflow}]{codigo/main.cpp}
 
@@ -941,7 +941,7 @@ Nesta seção, o exemplo \texttt{examples/example-1} é resolvido manualmente e 
 
 \subsection{Passo 1: leitura do JSON}
 
-O \texttt{main} chama \texttt{InputParser::parseFile} (\texttt{src/cpp/main.cpp:129}). O parser:
+O \texttt{main} chama \texttt{InputParser::parseFile} ou \texttt{parseString}, conforme a opção de entrada (\texttt{src/cpp/main.cpp:180--182}). O parser:
 
 \begin{enumerate}[leftmargin=1.5em]
   \item cria os nós 1 e 2 com coordenadas \((0,0)\) e \((4,0)\);
@@ -1405,9 +1405,13 @@ ctest --test-dir build --output-on-failure
 ./build/ms2_cli --input examples/example-1/input.json \
                 --output /tmp/output.json \
                 --samples 401
+
+./build/ms2_cli --input-text "$(cat examples/example-1/input.json)"
+./build/ms2_cli --input examples/example-1/input.json \
+                --only-displacements
 \end{verbatim}
 
-Sem argumentos, o CLI executa uma demonstração de viga em balanço e imprime a comparação com a solução analítica.
+Sem argumentos, o CLI executa uma demonstração de viga em balanço e imprime a comparação com a solução analítica. As opções \verb|-it/--input-text| e \verb|-od/--only-displacements| permitem enviar o JSON diretamente como texto e imprimir apenas os deslocamentos nodais.
 
 \subsection{Validação dos exemplos}
 

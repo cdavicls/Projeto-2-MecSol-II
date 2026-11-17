@@ -277,6 +277,22 @@ O script configura o CMake, compila `ms2_core`, `ms2_cli` e `ms2_tests`, e execu
 # Resolver um exemplo e imprimir o JSON
 ./build/ms2_cli -i examples/example-2/input.json
 
+# Enviar o modelo diretamente como texto JSON
+./build/ms2_cli -it '{
+  "nodes": [
+    {"id": 1, "x": 0.0, "y": 0.0},
+    {"id": 2, "x": 4.0, "y": 0.0}
+  ],
+  "elements": [
+    {"id": 1, "node_i": 1, "node_j": 2, "E": 210e9, "I": 8.333333333333333e-6}
+  ],
+  "supports": [{"node": 1, "type": "fixed"}],
+  "nodal_loads": [{"node": 2, "fy": -1000.0}]
+}'
+
+# Imprimir apenas os deslocamentos nodais
+./build/ms2_cli -i examples/example-1/input.json -od
+
 # Salvar o resultado e aumentar a resolução dos diagramas
 ./build/ms2_cli -i examples/example-3/input.json \
   -o examples/example-3/output.json --samples 2001

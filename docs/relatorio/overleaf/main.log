@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.11.14)  16 NOV 2026 01:33
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.11.14)  16 NOV 2026 23:59
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1018,13 +1018,19 @@ LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
 (./codigo/BeamSolver.cpp [20]) (./codigo/PostProcessor.cpp [21])
 (./codigo/PostProcessor.cpp [22]) (./codigo/PostProcessor.cpp [23])
 (./codigo/InputParser.cpp [24] [25]) (./codigo/OutputWriter.cpp [26])
-(./codigo/main.cpp) [27] (./codigo/cantilever-input.json) [28]
+(./codigo/main.cpp [27]) (./codigo/cantilever-input.json) [28]
 Underfull \hbox (badness 1742) in paragraph at lines 1022--1023
 []\T1/lmr/m/n/12 (+20) Não há carga dis-tri-bu-ída nem carga pon-tual in-terna 
 neste exem-plo, en-tão
  []
 
-[29] [30] [31] [32] [33] [34] [35] (./main.aux)
+[29] [30] [31] [32] [33] [34]
+Underfull \hbox (badness 1028) in paragraph at lines 1414--1415
+\T1/lmr/m/n/12 (+20) prime a com-pa-ra-ção com a so-lu-ção ana-lí-tica. As op-ç
+ões [][]\T1/lmtt/m/n/12 -it/--input-text []\T1/lmr/m/n/12 (+20) e
+ []
+
+[35] [36] (./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -1033,10 +1039,10 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 140A051BC36DF7D23A6C3D0B92A73C8B;12082.
  ) 
 Here is how much of TeX's memory you used:
- 30128 strings out of 469495
- 535588 string characters out of 5470097
- 1956597 words of memory out of 5000000
- 57116 multiletter control sequences out of 15000+600000
+ 30143 strings out of 469495
+ 535851 string characters out of 5470097
+ 1956598 words of memory out of 5000000
+ 57124 multiletter control sequences out of 15000+600000
  720643 words of font info for 185 fonts, out of 8000000 for 9000
  16 hyphenation exceptions out of 8191
  84i,12n,94p,1001b,2231s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1055,10 +1061,10 @@ blic/lm/lmsy7.pfb></usr/share/texmf-dist/fonts/type1/public/lm/lmsy8.pfb></usr/
 share/texmf-dist/fonts/type1/public/lm/lmtk10.pfb></usr/share/texmf-dist/fonts/
 type1/public/lm/lmtt10.pfb></usr/share/texmf-dist/fonts/type1/public/lm/lmtt12.
 pfb>
-Output written on main.pdf (36 pages, 489973 bytes).
+Output written on main.pdf (37 pages, 492135 bytes).
 PDF statistics:
- 1698 PDF objects out of 1728 (max. 8388607)
- 1599 compressed objects within 16 object streams
- 983 named destinations out of 1000 (max. 500000)
+ 1713 PDF objects out of 1728 (max. 8388607)
+ 1612 compressed objects within 17 object streams
+ 990 named destinations out of 1000 (max. 500000)
  55789 words of extra memory for PDF output out of 61914 (max. 10000000)
 

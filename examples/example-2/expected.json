@@ -1,13 +1,19 @@
 {
-  "description": "Simply supported beam under a uniform distributed load",
+  "description": "Exemplo da Aula",
   "tolerance": 1e-6,
   "checks": {
-    "reactions[0].fy": 2000.0,
-    "reactions[1].fy": 2000.0,
-    "displacements[0].theta": -0.0015238095238095239,
-    "displacements[1].theta": 0.0015238095238095239,
-    "maxima.shear": 2000.0,
-    "maxima.moment": 2000.0,
-    "maxima.deflection": 0.0019047619047619048
+    "reactions[0].fy": 5333.33,
+    "reactions[1].fy": 1333.33,
+    "reactions[1].mz": 8000.0,
+    "reactions[2].fy": 10666.67,
+    "displacements[0].theta": -9.5e-5,
+    "displacements[1].theta": -6.22e-6,
+    "displacements[2].theta": -1.13e-4,
+    "displacements[0].v": 0.0,
+    "displacements[1].v": -1.33e-4,
+    "displacements[2].v": 0.0,
+    "maxima.shear": 10666.67,
+    "maxima.moment": 8000.0,
+    "maxima.deflection": -1.13e-4
   }
 }

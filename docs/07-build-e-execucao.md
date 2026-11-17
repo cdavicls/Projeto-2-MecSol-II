@@ -57,6 +57,12 @@ ctest --test-dir build --output-on-failure
 # Salvar resultado
 ./build/ms2_cli -i examples/example-1/input.json -o /tmp/out.json
 
+# Enviar o JSON como texto
+./build/ms2_cli -it "$(cat examples/example-1/input.json)"
+
+# Imprimir apenas os deslocamentos
+./build/ms2_cli -i examples/example-1/input.json -od
+
 # Ajuda
 ./build/ms2_cli --help
 ```

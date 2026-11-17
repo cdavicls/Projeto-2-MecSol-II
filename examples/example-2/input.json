@@ -1,16 +1,19 @@
 {
   "nodes": [
     {"id": 1, "x": 0.0, "y": 0.0},
-    {"id": 2, "x": 4.0, "y": 0.0}
+    {"id": 2, "x": 2.0, "y": 0.0},
+    {"id": 3, "x": 4.0, "y": 0.0}
   ],
   "elements": [
-    {"id": 1, "node_i": 1, "node_j": 2, "E": 210e9, "I": 8.333333333333333e-6}
+    {"id": 1, "node_i": 1, "node_j": 2, "E": 200e9, "I": 5e-4},
+    {"id": 2, "node_i": 2, "node_j": 3, "E": 200e9, "I": 5e-4}
   ],
   "supports": [
-    {"node": 1, "fix_v": true, "fix_theta": false, "type": "pinned"},
-    {"node": 2, "fix_v": true, "fix_theta": false, "type": "roller"}
+    {"node": 1, "fix_v": true, "fix_theta": false, "type": "roller"},
+    {"node": 3, "fix_v": true, "fix_theta": false, "type": "pinned"}
   ],
   "distributed_loads": [
-    {"element": 1, "q_i": -1000.0, "q_j": -1000.0}
+    {"element": 1, "q_i": -0, "q_j": -4000.0},
+    {"element": 2, "q_i": -4000.0, "q_j": -8000.0}
   ]
 }
